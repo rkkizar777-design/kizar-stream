@@ -139,16 +139,10 @@
 
       </div>
 
-      <!-- Realtime Progress Indicator -->
-      <div id="stream-progress" class="cute-progress hidden">
-        <div class="progress-info">
-          <span class="progress-spinner"></span>
-          <span class="progress-msg" id="progress-text">Connecting...</span>
-          <span class="progress-val" id="progress-pct">0%</span>
-        </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progress-fill"></div>
-        </div>
+      <!-- Streaming status: a line of text, not a panel -->
+      <div id="stream-progress" class="stream-line hidden" role="status" aria-live="polite">
+        <span class="stream-dot" aria-hidden="true"></span>
+        <span class="stream-msg" id="progress-text">Connecting...</span>
       </div>
 
       <!-- Operator space: whatever the Control Room set for this user, nothing else -->
