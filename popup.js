@@ -1708,7 +1708,8 @@ async function renderChips(key) {
     card.className = 'acc-card is-' + key;
     const accNum = idx + 1;
     const fpShort = String(s.fingerprint || '').slice(0, 4).toUpperCase();
-    const timeText = formatTimeAgo(s.savedAt);
+    // Already inside the Saved view, so the "Saved" prefix is just wasted width.
+    const timeText = formatTimeAgo(s.savedAt).replace(/^saved\s+/i, '');
 
     // Built as four explicit grid tracks: dot, text, time, actions. The text
     // track is allowed to shrink and truncate, so a long fingerprint can never
