@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kizar Stream | Minimal Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 30%, #171b29 0%, #08090f 100%);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      box-sizing: border-box;
+      padding: 30px 16px;
+    }
+
+    .preview-pill-bar {
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+    }
+
+    .preview-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    .preview-tag span {
+      color: #fff;
+    }
+
+    .switch-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .switch-tab {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .switch-tab:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .switch-tab.active {
+      background: linear-gradient(135deg, #818cf8, #38bdf8);
+      color: #070913;
+      font-weight: 700;
+    }
+
+    /* Extension Phone-like Device Mockup */
+    .device-shell {
+      width: 360px;
+      height: 550px;
+      background: #0b0d14;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 20px 50px -10px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(56, 189, 248, 0.1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .device-scroll {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Preview Toolbar -->
+  <div class="preview-pill-bar">
+    <div class="preview-tag">
+      ✨ <span>Kizar Stream</span> (Minimal Cute)
+    </div>
+    <div class="switch-tabs">
+      <button class="switch-tab active" onclick="tabGo('home', this)">Stream</button>
+      <button class="switch-tab" onclick="tabGo('sessions', this)">Saved</button>
+      <button class="switch-tab" onclick="tabGo('profile', this)">Profile</button>
+      <button class="switch-tab" onclick="tabGo('plan', this)">Plan</button>
+    </div>
+  </div>
+
+  <!-- Device Window -->
+  <div class="device-shell">
+    <div class="device-scroll">
+      
+      <!-- Header -->
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-logo">
+            <span>K</span>
+          </div>
+          <div class="brand-name">Kizar<span>Stream</span></div>
+        </div>
+        
+        <div class="header-right">
+          <div class="status-pill ok" id="status-pill" title="Cloud status">
+            <span class="status-dot"></span>
+            <span id="status-text">Ready</span>
+          </div>
+          <button id="btn-refresh" class="icon-btn" title="Refresh">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L19 4v6h-6z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Views -->
+      <main class="main-content">
+
+        <!-- View: Home Streaming Hub -->
+        <section id="view-home" class="view">
+                      <div class="stream-grid">
+        
+        <!-- Netflix Card (Big & Minimalist) -->
+        <div class="stream-card netflix">
+          <div class="card-ambient-glow n-glow"></div>
+          
+          <div class="card-head">
+            <div class="brand-left">
+              <div class="platform-icon n-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="#E50914" d="M5 2v20c2-.4 4-.8 6-1.2V2H5z"/>
+                  <path fill="#B81D24" d="M11 2l6 18c2-.4 4-.8 6-1.2V2h-5l-4 12V2h-3z" opacity="0.8"/>
+                  <path fill="#E50914" d="M11 2l7 19.5c1.7-.3 3.3-.6 5-.9V2h-5l-4 11V2z"/>
+                </svg>
+              </div>
+              <span class="platform-title">Netflix</span>
+            </div>
+            
+            <div class="live-pill n-pill">
+              <span class="live-dot red"></span>
+              <span>LIVE</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="counter-cluster">
+              <span class="count-big" id="netflix-count">24</span>
+              <span class="count-caption">sessions ready</span>
+            </div>
+          </div>
+
+          <button id="btn-stream-netflix" class="stream-btn n-btn" >
+            <svg viewBox="0 0 24 24" class="btn-play-svg"><path d="M8 5v14l11-7z"/></svg>
+            <span>Stream Netflix</span>
+            <span class="btn-shine"></span>
+          </button>
+        </div>
+
+        <!-- Prime Video Card (Big & Minimalist) -->
+        <div class="stream-card prime">
+          <div class="card-ambient-glow p-glow"></div>
+          
+          <div class="card-head">
+            <div class="brand-left">
+              <div class="platform-icon p-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                  <path d="M3.5 15c4.8 3.5 12 3.5 17 0" stroke="#00A8E1" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M18 13.5l3 1.5-1 3" stroke="#00A8E1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 6.5h4c2 0 3.8 1.5 3.8 3.5s-1.8 3.5-3.8 3.5H5V6.5zm2.8 5h1.2c.8 0 1.5-.6 1.5-1.5s-.7-1.5-1.5-1.5H7.8v3z" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <span class="platform-title">Prime Video</span>
+            </div>
+            
+            <div class="live-pill p-pill">
+              <span class="live-dot blue"></span>
+              <span>LIVE</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="counter-cluster">
+              <span class="count-big" id="prime-count">18</span>
+              <span class="count-caption">sessions ready</span>
+            </div>
+          </div>
+
+          <button id="btn-stream-prime" class="stream-btn p-btn" >
+            <svg viewBox="0 0 24 24" class="btn-play-svg"><path d="M8 5v14l11-7z"/></svg>
+            <span>Stream Prime</span>
+            <span class="btn-shine"></span>
+          </button>
+        </div>
+
+      </div>
+
+          <!-- Realtime Progress Indicator -->
+          <div id="stream-progress" class="cute-progress">
+            <div class="progress-info">
+              <span class="progress-spinner"></span>
+              <span class="progress-msg" id="progress-text">Session connected</span>
+              <span class="progress-val" id="progress-pct">100%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progress-fill" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Home Footer -->
+          <div class="home-bottom">
+            <span id="footer-note" class="cute-subtext">Live cloud sync</span>
+            <button id="btn-unban" class="text-action-btn">Clear blocked</button>
+          </div>
+        </section>
+
+                <!-- View: Saved Sessions -->
+        <section id="view-sessions" class="view hidden">
+          <div class="section-header">
+            <h3 class="section-title">Saved Accounts</h3>
+            <span class="section-sub">1-tap direct re-entry without testing</span>
+          </div>
+
+          <div class="cute-card session-card">
+            <div class="session-header">
+              <span class="mini-tag n">Netflix</span>
+            </div>
+            <div class="saved-row" id="saved-netflix">
+              <div class="saved-account-card">
+                <div class="saved-acc-left">
+                  <div class="acc-avatar">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  </div>
+                  <div class="acc-info">
+                    <div class="acc-title">Account #1 <span class="acc-code">#8F42</span></div>
+                    <div class="acc-meta">Saved 10m ago</div>
+                  </div>
+                </div>
+                <div class="saved-acc-right">
+                  <button class="acc-reenter-btn" onclick="msgToast('Re-entering Netflix Account #1...')">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span>Re-enter</span>
+                  </button>
+                  <button class="acc-del-btn" onclick="this.closest('.saved-account-card').remove(); msgToast('Account removed');">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="saved-account-card">
+                <div class="saved-acc-left">
+                  <div class="acc-avatar">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  </div>
+                  <div class="acc-info">
+                    <div class="acc-title">Account #2 <span class="acc-code">#99BC</span></div>
+                    <div class="acc-meta">Saved 2h ago</div>
+                  </div>
+                </div>
+                <div class="saved-acc-right">
+                  <button class="acc-reenter-btn" onclick="msgToast('Re-entering Netflix Account #2...')">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span>Re-enter</span>
+                  </button>
+                  <button class="acc-del-btn" onclick="this.closest('.saved-account-card').remove(); msgToast('Account removed');">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="empty-state hidden" id="empty-netflix">No saved sessions yet</div>
+          </div>
+
+          <div class="cute-card session-card">
+            <div class="session-header">
+              <span class="mini-tag p">Prime</span>
+            </div>
+            <div class="saved-row" id="saved-prime">
+              <div class="saved-account-card">
+                <div class="saved-acc-left">
+                  <div class="acc-avatar">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  </div>
+                  <div class="acc-info">
+                    <div class="acc-title">Account #1 <span class="acc-code">#74EA</span></div>
+                    <div class="acc-meta">Saved 1h ago</div>
+                  </div>
+                </div>
+                <div class="saved-acc-right">
+                  <button class="acc-reenter-btn" onclick="msgToast('Re-entering Prime Account #1...')">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span>Re-enter</span>
+                  </button>
+                  <button class="acc-del-btn" onclick="this.closest('.saved-account-card').remove(); msgToast('Account removed');">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="empty-state hidden" id="empty-prime">No saved sessions yet</div>
+          </div>
+        </section>
+
+        <!-- View: Profile -->
+        <section id="view-profile" class="view hidden">
+          <div class="cute-card profile-card">
+            <div class="avatar-wrap">
+              <div class="cute-avatar" id="avatar">K</div>
+            </div>
+            <div class="profile-info">
+              <div class="name-line">
+                <span class="username" id="p-name">kizar</span>
+                <button id="btn-edit-name" class="mini-icon-btn" title="Edit username">
+                  <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+              </div>
+
+              <div class="sub-line" id="p-since">Member since 01/15/2026</div>
+            </div>
+
+            <div class="plan-badge-row">
+              <span class="plan-pill" id="p-plan">VIP</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- View: Plan & Membership -->
+        <section id="view-plan" class="view hidden">
+          <div class="cute-card member-card active" id="member-card">
+            <div class="member-header">
+              <div class="plan-label-group">
+                <span class="plan-tier-name" id="m-plan">VIP</span>
+                <span id="m-desc" class="plan-desc-text">All features unlocked</span>
+              </div>
+              <span class="member-flag">VIP</span>
+            </div>
+            
+            <ul class="cute-benefits" id="m-benefits">
+              <li>Unlimited Netflix & Prime streaming</li>
+              <li>3 Saved sessions memory</li>
+              <li>Priority session pool</li>
+            </ul>
+          </div>
+
+          <div class="cute-card code-card">
+            <div class="code-title">Unlock with key</div>
+            <div class="code-row">
+              <input id="code-input" class="cute-input" maxlength="40" placeholder="Enter key" autocomplete="off" spellcheck="false">
+              <button id="btn-activate" class="cute-btn primary">Unlock</button>
+            </div>
+            <p id="code-status" class="code-hint">Enter your license code to activate VIP.</p>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Minimal Cute Dock Navigation -->
+      <nav class="bottom-bar">
+        <button class="nav-btn active" data-view="home" onclick="navGo('home')">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Stream</span>
+        </button>
+        <button class="nav-btn" data-view="sessions" onclick="navGo('sessions')">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zm-8-2l6-4-6-4v8z"/></svg>
+          <span>Saved</span>
+        </button>
+        <button class="nav-btn" data-view="profile" onclick="navGo('profile')">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>Profile</span>
+        </button>
+        <button class="nav-btn" data-view="plan" onclick="navGo('plan')">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <span>Plan</span>
+        </button>
+      </nav>
+
+      <!-- Minimal Toast -->
+      <div id="toast-msg" class="cute-toast">
+        <span class="toast-dot"></span>
+        <span class="toast-text"></span>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function tabGo(name, btn) {
+      document.querySelectorAll('.switch-tab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      navGo(name);
+    }
+
+    function navGo(name) {
+      document.querySelectorAll('.view').forEach(v => {
+        v.classList.toggle('hidden', v.id !== 'view-' + name);
+      });
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === name);
+      });
+      document.querySelectorAll('.switch-tab').forEach(b => {
+        b.classList.toggle('active', b.textContent.toLowerCase() === name || (name === 'home' && b.textContent.toLowerCase() === 'stream'));
+      });
+    }
+
+    document.getElementById('btn-stream-netflix').addEventListener('click', () => {
+      msgToast('Netflix stream connected!');
+    });
+
+    document.getElementById('btn-stream-prime').addEventListener('click', () => {
+      msgToast('Prime stream connected!');
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+      const b = document.getElementById('btn-refresh');
+      b.classList.add('spinning');
+      msgToast('Syncing live sessions...');
+      setTimeout(() => b.classList.remove('spinning'), 700);
+    });
+
+    function msgToast(msg) {
+      const t = document.getElementById('toast-msg');
+      t.querySelector('.toast-text').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
+  </script>
+</body>
+</html>
