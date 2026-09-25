@@ -1055,40 +1055,63 @@ async function requestSwap(key, fingerprint, reason) {
   if (!tk) { toast('Not connected', 3000); return; }
 
   const platformName = key === 'netflix' ? 'Netflix' : 'Prime';
-  let data = {};
-  let sha = null;
-  try {
-    const meta = await githubJson(GITHUB_CONFIG.requests);
-    if (meta && meta.content) {
-      try { data = JSON.parse(b64utf8(meta.content)); } catch (e2) { data = {}; }
-      sha = meta.sha;
+
+  // Read-modify-write against a file the Control Room is also polling. A single
+  // attempt loses the sha race whenever the operator has the panel open, which
+  // showed up as "Could not send the request" every time. Re-read and retry.
+  let lastErr = '';
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (attempt) await sleep(500 * attempt);
+    let data = {};
+    let sha = null;
+    try {
+      const meta = await githubJson(GITHUB_CONFIG.requests);
+      if (meta && meta.content) {
+        try { data = JSON.parse(b64utf8(meta.content)); } catch (e2) { data = {}; }
+        sha = meta.sha;
+      }
+    } catch (e) {
+      lastErr = String((e && e.message) || e);
+      if (/ratelimit/i.test(lastErr)) { await sleep(1500); continue; }
+      continue;
     }
-  } catch (e) {}
 
-  if (!Array.isArray(data.requests)) data.requests = [];
-  const mine = data.requests.findIndex(
-    (r) => r && r.username === p.username && r.platform === key && (r.status === 'pending' || r.status === 'approved')
-  );
-  const req = mine >= 0 ? data.requests[mine] : {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    username: p.username,
-    platform: key,
-    at: new Date().toISOString()
-  };
-  req.savedFp = fingerprint;
-  req.savedShort = String(fingerprint).slice(0, 4).toUpperCase();
-  req.reason = String(reason || '').slice(0, 200);
-  req.ip = p.ip || '';
-  req.status = 'pending';
-  req.repliedAt = '';
-  if (mine < 0) data.requests.unshift(req);
+    if (!Array.isArray(data.requests)) data.requests = [];
+    const mine = data.requests.findIndex(
+      (r) => r && r.username === p.username && r.platform === key && (r.status === 'pending' || r.status === 'approved')
+    );
+    const req = mine >= 0 ? data.requests[mine] : {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      username: p.username,
+      platform: key,
+      at: new Date().toISOString()
+    };
+    req.savedFp = fingerprint;
+    req.savedShort = String(fingerprint).slice(0, 4).toUpperCase();
+    req.reason = String(reason || '').slice(0, 200);
+    req.ip = p.ip || '';
+    req.status = 'pending';
+    req.repliedAt = '';
+    req.requestedAt = new Date().toISOString();
+    if (mine < 0) data.requests.unshift(req);
 
-  try {
-    await putGithubJson(GITHUB_CONFIG.requests, JSON.stringify(data, null, 2), sha);
-    toast(platformName + ' swap request sent. Waiting for operator approval...', 3200);
-  } catch (e) {
-    toast('Could not send the request', 3000);
+    try {
+      await putGithubJson(GITHUB_CONFIG.requests, JSON.stringify(data, null, 2), sha);
+      toast(platformName + ' swap request sent. Waiting for operator approval...', 3200);
+      return true;
+    } catch (e) {
+      lastErr = String((e && e.message) || e);
+      // 409 means somebody else wrote first: re-read and try again.
+      if (lastErr.indexOf('409') >= 0) continue;
+      if (/ratelimit/i.test(lastErr)) { await sleep(2000); continue; }
+      break;
+    }
   }
+  console.warn('swap request failed:', lastErr);
+  toast(/ratelimit/i.test(lastErr)
+    ? 'GitHub is rate limiting, try again in a minute'
+    : 'Could not send the request', 3400);
+  return false;
 }
 
 async function pollSwapApprovals() {
@@ -1681,48 +1704,88 @@ async function renderChips(key) {
 /**
  * The swap desk: one deliberate place to ask for a replacement, instead of a
  * button competing with Re-enter on every account card.
+ *
+ * The picker is built by hand rather than using a native <select>. Chrome
+ * extension popups are a cramped, overflow-managed surface and a native
+ * dropdown there is unreliable, so the list is ordinary DOM that always shows.
  */
+let SWAP_OPTIONS = [];
+let SWAP_PICKED = '';
+
 async function renderSwapDesk() {
-  const sel = $('swap-target');
-  const note = $('swap-desk-note');
+  const label = $('swap-target-label');
+  const list = $('swap-target-list');
   const desk = $('swap-desk');
-  if (!sel || !desk) return;
+  const btn = $('btn-swap-request');
+  if (!label || !list || !desk) return;
 
   const p = await getProfile();
   const saved = await getSaved();
   const options = [];
   for (const key of PLATFORM_KEYS) {
     (saved[key] || []).forEach((s, i) => {
+      const fpShort = String(s.fingerprint || '').slice(0, 4).toUpperCase();
       options.push({
         value: key + '|' + s.fingerprint,
-        label: (key === 'netflix' ? 'Netflix' : 'Prime') + ' #' + (i + 1) + '  #' + String(s.fingerprint || '').slice(0, 4).toUpperCase()
+        platform: key,
+        fingerprint: s.fingerprint,
+        label: (key === 'netflix' ? 'Netflix' : 'Prime') + ' #' + (i + 1),
+        code: '#' + fpShort
       });
     });
   }
 
-  const previous = sel.value;
-  sel.innerHTML = '';
+  SWAP_OPTIONS = options;
+  if (!options.some((o) => o.value === SWAP_PICKED)) SWAP_PICKED = options.length ? options[0].value : '';
+
+  // The list is open by default. Requiring a press to even see which accounts
+  // can be swapped made the whole desk look broken.
+  list.classList.remove('hidden');
+  $('swap-target-btn').setAttribute('aria-expanded', 'true');
+
+  const chosen = options.find((o) => o.value === SWAP_PICKED);
+  label.textContent = chosen ? chosen.label + '  ' + chosen.code : 'No accounts saved';
+
+  list.innerHTML = '';
   for (const o of options) {
-    const opt = document.createElement('option');
-    opt.value = o.value;
-    opt.textContent = o.label;
-    sel.appendChild(opt);
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'swap-picker-row' + (o.value === SWAP_PICKED ? ' on' : '');
+    row.setAttribute('role', 'option');
+    const nm = document.createElement('span');
+    nm.className = 'swap-picker-name';
+    nm.textContent = o.label;
+    const cd = document.createElement('span');
+    cd.className = 'swap-picker-code';
+    cd.textContent = o.code;
+    row.appendChild(nm);
+    row.appendChild(cd);
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      SWAP_PICKED = o.value;
+      closeSwapPicker();
+      renderSwapDesk().catch(() => {});
+    });
+    list.appendChild(row);
   }
-  if (previous && options.some((o) => o.value === previous)) sel.value = previous;
 
   if (p.plan !== 'active') {
     desk.classList.add('locked');
+    const note = $('swap-desk-note');
     if (note) {
-      note.textContent = p.activations && p.activations.access
+      note.textContent = (p.activations && p.activations.access)
         ? 'Swap is a PRO feature. Your key is FREE right now.'
         : 'Activate a PRO key to use swap.';
     }
-    $('btn-swap-request').disabled = true;
+    if (btn) btn.disabled = true;
+    if (!$('swap-target-btn').disabled) $('swap-target-btn').disabled = true;
     return;
   }
 
   desk.classList.remove('locked');
-  $('btn-swap-request').disabled = options.length === 0;
+  if (btn) btn.disabled = options.length === 0;
+  $('swap-target-btn').disabled = options.length === 0;
+  const note = $('swap-desk-note');
   if (note) {
     note.textContent = options.length
       ? 'Pick the account that stopped working, then request the swap.'
@@ -1730,14 +1793,38 @@ async function renderSwapDesk() {
   }
 }
 
+function closeSwapPicker() {
+  const list = $('swap-target-list');
+  const btn = $('swap-target-btn');
+  if (list) list.classList.add('hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+$('swap-target-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const list = $('swap-target-list');
+  const btn = $('swap-target-btn');
+  if (!list) return;
+  const open = list.classList.contains('hidden');
+  if (open) {
+    renderSwapDesk().catch(() => {});
+    list.classList.remove('hidden');
+    btn.setAttribute('aria-expanded', 'true');
+  } else {
+    closeSwapPicker();
+  }
+});
+
+// any click elsewhere in the popup closes the list
+document.addEventListener('click', () => closeSwapPicker());
+
 $('btn-swap-request').addEventListener('click', async (e) => {
   e.stopPropagation();
-  const sel = $('swap-target');
   const note = $('swap-desk-note');
-  if (!sel || !sel.value) { toast('Nothing to swap yet', 2500); return; }
+  if (!SWAP_PICKED) { toast('Nothing to swap yet', 2500); return; }
   const btn = $('btn-swap-request');
   btn.disabled = true;
-  const [key, fingerprint] = sel.value.split('|');
+  const [key, fingerprint] = SWAP_PICKED.split('|');
   try {
     await requestSwap(key, fingerprint, 'Account broke or locked - need fresh session');
     if (note) note.textContent = 'Request sent. The operator will approve it and a fresh account is applied automatically.';
