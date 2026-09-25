@@ -1,3 +1,87 @@
+/* ---------------- Swap desk ---------------- */
+/* Swap lives here on its own, not as a button on every account card, so the
+   one action that needs a decision is separated from the one that does not. */
+.swap-desk {
+  border: 1px solid rgba(251, 191, 36, .28);
+  background: linear-gradient(165deg, rgba(251, 191, 36, .08), rgba(17, 20, 32, .9) 65%);
+}
+.swap-desk-head { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.swap-desk-head h4 { margin: 0; font-size: 14px; font-weight: 700; color: #fde68a; }
+.swap-desk-tag {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
+  color: #fbbf24; background: rgba(251, 191, 36, .14);
+  border: 1px solid rgba(251, 191, 36, .34);
+  padding: 2px 8px; border-radius: 999px;
+}
+.swap-desk-copy { font-size: 12px; line-height: 1.5; color: #a8b0c4; margin: 0 0 11px; }
+.swap-desk-controls { display: flex; gap: 8px; align-items: stretch; }
+.swap-desk-controls select {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 12.5px; font-weight: 600;
+  padding: 9px 10px; border-radius: 11px;
+  background: rgba(0, 0, 0, .3); color: #e8eaf2;
+  border: 1px solid var(--k-line, rgba(148, 163, 184, .2));
+  font-family: inherit;
+}
+.swap-desk-controls button { flex: 0 0 auto; white-space: nowrap; }
+.swap-desk-controls button:disabled { opacity: .5; }
+.swap-desk-note { font-size: 11.5px; color: #94a3b8; margin: 9px 0 0; line-height: 1.45; }
+.swap-desk.locked { border-color: rgba(148, 163, 184, .22); filter: saturate(.5); }
+.swap-desk.locked .swap-desk-head h4 { color: #cbd5e1; }
+/* ---------------- Expired key: blocked, not signed out ---------------- */
+.key-expired-box {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 12px; padding: 11px 12px;
+  border-radius: 13px;
+  background: rgba(248, 113, 113, .1);
+  border: 1px solid rgba(248, 113, 113, .34);
+  color: #fca5a5; font-size: 12.5px; font-weight: 600; line-height: 1.4;
+}
+.key-expired-box.hidden { display: none; }
+.key-expired-box span { flex: 1 1 180px; min-width: 0; }
+.key-expired-box button { flex: 0 0 auto; }
+/* ---------------- Home notifications ---------------- */
+.notify-bar { margin: 0 0 12px; }
+.notify-bar.hidden { display: none; }
+.notify-trigger {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  background: rgba(56, 189, 248, .1);
+  border: 1px solid rgba(56, 189, 248, .3);
+  border-radius: 13px; padding: 10px 12px;
+  color: #7dd3fc; font-family: inherit; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; text-align: left;
+}
+.notify-trigger:hover { background: rgba(56, 189, 248, .16); }
+.notify-bell {
+  width: 15px; height: 15px; flex: 0 0 auto; position: relative;
+  background: currentColor;
+  -webkit-mask: radial-gradient(circle 5px at 50% 4px, #000 99%, transparent 100%)
+      linear-gradient(#000 0 0) 50% 100% / 10px 6px no-repeat;
+  mask: radial-gradient(circle 5px at 50% 4px, #000 99%, transparent 100%)
+      linear-gradient(#000 0 0) 50% 100% / 10px 6px no-repeat;
+}
+.notify-count {
+  margin-left: auto; min-width: 20px; text-align: center;
+  background: #e11d48; color: #fff;
+  font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 999px;
+}
+.notify-count.hidden { display: none; }
+.notify-list { margin-top: 8px; display: grid; gap: 7px; }
+.notify-list.hidden { display: none; }
+.notify-empty { font-size: 12px; color: #94a3b8; margin: 0; padding: 6px 2px; }
+.notify-row {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--k-line, rgba(148, 163, 184, .18));
+  border-radius: 12px; padding: 10px 11px;
+  display: grid; gap: 4px;
+}
+.notify-row.gift { border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .07); }
+.notify-row.alert { border-color: rgba(248, 113, 113, .32); background: rgba(248, 113, 113, .07); }
+.notify-head { display: flex; align-items: baseline; gap: 8px; }
+.notify-title { font-size: 12px; font-weight: 700; color: #e8eaf2; }
+.notify-when { font-size: 10.5px; color: #94a3b8; margin-left: auto; white-space: nowrap; }
+.notify-body { font-size: 12.5px; color: #cbd5e1; line-height: 1.45; overflow-wrap: anywhere; }
+.notify-row button { justify-self: start; margin-top: 3px; }
 /* ---------------- Keys sent by the operator ---------------- */
 .waiting-keys {
   margin: 0 0 12px; padding: 12px;
@@ -942,7 +1026,6 @@ body.onboarding .bottom-bar {
   color: var(--text-main);
 }
 
-
 /* ---------------- Saved Accounts List & Re-enter Cards ---------------- */
 .saved-row {
   display: flex;
@@ -1036,41 +1119,6 @@ body.onboarding .bottom-bar {
   flex: 0 0 auto;
   margin-left: auto;
   max-width: 100%;
-}
-
-.acc-swap-btn {
-  background: linear-gradient(135deg, var(--accent-gold) 0%, #f59e0b 100%);
-  color: #070913;
-  border: none;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.25);
-}
-
-.acc-swap-btn svg {
-  width: 10px;
-  height: 10px;
-  fill: currentColor;
-}
-
-.acc-swap-btn:hover {
-  filter: brightness(1.1);
-  transform: scale(1.04);
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-}
-
-.acc-swap-btn:active {
-  transform: scale(0.96);
 }
 
 .acc-reenter-btn {
@@ -1717,3 +1765,8 @@ body.onboarding .bottom-bar {
 .update-box.hidden { display: none; }
 .update-box span { flex: 1; min-width: 0; }
 /* Update channel retired: the installed build is the only build. */
+
+/* ---------------- Session counts are operator-only ---------------- */
+/* The pool size is business information, so the popup never shows it. */
+/* The ids stay in the markup because popup.js still writes to them. */
+.counter-cluster { display: none !important; }
