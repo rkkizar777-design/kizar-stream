@@ -61,6 +61,20 @@
 
     <!-- View: Home Streaming Hub -->
     <section id="view-home" class="view">
+      <div id="key-expired-box" class="key-expired-box hidden">
+        <span id="key-expired-text">Your key has expired. Renew it to keep streaming.</span>
+        <button id="btn-renew" class="cute-btn xs">Renew key</button>
+      </div>
+
+      <div id="notify-bar" class="notify-bar hidden">
+        <button id="btn-notify" class="notify-trigger">
+          <span class="notify-bell" aria-hidden="true"></span>
+          <span id="notify-label">Notifications</span>
+          <span id="notify-count" class="notify-count hidden">0</span>
+        </button>
+        <div id="notify-list" class="notify-list hidden"></div>
+      </div>
+
       <div id="swap-banner" class="swap-banner hidden">
         <span id="swap-banner-text"></span>
         <button id="btn-swap-accept" class="cute-btn gold">Accept</button>
@@ -162,6 +176,23 @@
         </div>
         <div class="saved-row" id="saved-prime"></div>
         <div class="empty-state" id="empty-prime">No saved sessions yet</div>
+      </div>
+
+      <div class="cute-card swap-desk" id="swap-desk">
+        <div class="swap-desk-head">
+          <h4>Finished an account?</h4>
+          <span class="swap-desk-tag">PRO</span>
+        </div>
+        <p class="swap-desk-copy">
+          Swap is a request, not a button. Pick the account that stopped working and the
+          operator will release it and hand you a fresh one. The broken cookies can also be
+          blocked for everyone at the same time.
+        </p>
+        <div class="swap-desk-controls">
+          <select id="swap-target" class="cute-input"></select>
+          <button id="btn-swap-request" class="cute-btn gold">Request swap</button>
+        </div>
+        <p class="swap-desk-note" id="swap-desk-note">Nothing saved yet, so there is nothing to swap.</p>
       </div>
     </section>
 
