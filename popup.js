@@ -1674,6 +1674,68 @@ const PLAN_META = {
   active: { label: 'PRO', desc: 'Everything unlocked', flag: 'PRO' }
 };
 
+/**
+ * Keys the operator has sent but that have not been claimed yet.
+ *
+ * A granted key is already bound to this username in activation.json, so it is
+ * found by filtering the codes the extension already downloads. No extra
+ * request and no new endpoint needed.
+ */
+async function getWaitingKeys() {
+  const p = await getProfile();
+  if (!p.username) return [];
+  let codes;
+  try { codes = await fetchCodes(false); } catch (e) { return []; }
+  if (!codes) return [];
+  const all = Object.values(codes).reduce((a, l) => a.concat(l || []), []);
+  return all.filter((c) => c && c.usedBy === p.username && !c.used
+    && !(c.expiresAt && isExpired(c)));
+}
+
+async function renderWaitingKeys() {
+  const box = $('waiting-keys');
+  if (!box) return;
+  let list = [];
+  try { list = await getWaitingKeys(); } catch (e) { list = []; }
+  if (!list.length) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+  box.classList.remove('hidden');
+  box.innerHTML = '';
+  const head = document.createElement('p');
+  head.className = 'waiting-head';
+  head.textContent = list.length === 1
+    ? 'The operator sent you a key:'
+    : 'The operator sent you ' + list.length + ' keys:';
+  box.appendChild(head);
+  for (const c of list) {
+    const row = document.createElement('div');
+    row.className = 'waiting-row';
+    const tier = tierOfEntry(c) || 'PRO';
+    const when = c.permanent ? 'never expires' : timeLeftLabel(c.expiresAt);
+    row.innerHTML = '<code></code><span class="waiting-tier"></span><span class="waiting-when"></span>'
+      + '<button class="cute-btn xs"></button>';
+    row.querySelector('code').textContent = c.code;
+    row.querySelector('.waiting-tier').textContent = tier;
+    row.querySelector('.waiting-when').textContent = when;
+    const btn = row.querySelector('button');
+    btn.textContent = 'Claim';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const input = $('code-input');
+      if (input) input.value = c.code;
+      try {
+        await handleActivate();
+      } catch (e) {
+        btn.disabled = false;
+      }
+    });
+    box.appendChild(row);
+  }
+}
+
 async function renderPlanView() {
   const p = await getProfile();
   const isActive = p.plan === 'active';
@@ -1731,6 +1793,9 @@ async function renderPlanView() {
       strip.classList.add('hidden');
     }
   }
+
+  // Keys the operator sent that have not been claimed yet.
+  try { await renderWaitingKeys(); } catch (e) {}
 }
 
 async function finishSignup(uname, activations, tier) {
