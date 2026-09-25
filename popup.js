@@ -1103,7 +1103,10 @@ async function requestSwap(key, fingerprint, reason) {
     } catch (e) {
       lastErr = String((e && e.message) || e);
       // 409 means somebody else wrote first: re-read and try again.
+      // 422 "sha wasn't supplied" means the read gave us nothing to write
+      // against, and a plain re-read fixes that too.
       if (lastErr.indexOf('409') >= 0) continue;
+      if (/422/.test(lastErr) && /sha/i.test(lastErr)) continue;
       if (/ratelimit/i.test(lastErr)) { await sleep(2000); continue; }
       break;
     }
@@ -1117,7 +1120,7 @@ async function requestSwap(key, fingerprint, reason) {
       ? 'The extension cannot sign in to the data store any more. Tell the operator.'
       : /409/i.test(lastErr)
         ? 'The request list was being written at the same time. Press again.'
-        : 'Could not send the request (' + (lastErr || 'unknown error').slice(0, 80) + ')';
+        : 'Could not send the request (' + (lastErr || 'unknown error').slice(0, 110) + ')';
   toast(why, 4200);
   return { ok: false, reason: why, detail: lastErr };
 }
@@ -2159,17 +2162,14 @@ async function renderNotifications() {
 
   const count = $('notify-count');
   const label = $('notify-label');
-  if (box.unread > 0) {
-    bar.classList.remove('hidden');
-    if (count) { count.textContent = String(box.unread); count.classList.remove('hidden'); }
-    if (label) label.textContent = box.unread === 1 ? 'New notification' : 'New notifications';
-  } else if (box.notes.length) {
-    bar.classList.remove('hidden');
-    if (count) count.classList.add('hidden');
-    if (label) label.textContent = 'Notifications';
-  } else {
-    bar.classList.add('hidden');
+  // The bell is always there. Hiding it meant a user could not tell whether
+  // they had simply missed something.
+  bar.classList.remove('hidden');
+  if (count) {
+    if (box.unread > 0) { count.textContent = box.unread > 9 ? '9+' : String(box.unread); count.classList.remove('hidden'); }
+    else count.classList.add('hidden');
   }
+  if (label) label.textContent = box.unread > 0 ? box.unread + ' unread notifications' : 'No unread notifications';
 
   const list = $('notify-list');
   if (!list) return;
@@ -2228,9 +2228,15 @@ function wireNotifications() {
       e.stopPropagation();
       if (!list) return;
       const open = list.classList.contains('hidden');
-      if (open) list.classList.remove('hidden');
-      else list.classList.add('hidden');
-      if (open) await markNotificationsSeen();
+      if (open) {
+        list.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        await markNotificationsSeen();
+        await renderNotifications();
+      } else {
+        list.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 }
@@ -2573,19 +2579,39 @@ async function ensureDashboardFiles() {
 async function putGithubJson(path, content, sha) {
   const tk = await getOwnerToken();
   if (!tk) throw new Error('Key needed');
-  const body = { message: 'usage report', content: utf8ToB64(content) };
-  if (sha) body.sha = sha;
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${path}`, {
-    method: 'PUT',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: 'token ' + tk,
-      'User-Agent': 'kizar-stream',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${path}`;
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    Authorization: 'token ' + tk,
+    'User-Agent': 'kizar-stream',
+    'Content-Type': 'application/json'
+  };
+  const put = (useSha) => {
+    const body = { message: 'usage report', content: utf8ToB64(content) };
+    if (useSha) body.sha = useSha;
+    return fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+  };
+
+  let res = await put(sha);
+
+  // 422 "sha wasn't supplied" means the file exists but the caller had no sha,
+  // which happens whenever the read before the write came back empty. That is
+  // the most common way a write from here fails, and it looks identical to a
+  // real error unless the response body is read.
+  if (res.status === 422) {
+    const text = await res.text().catch(() => '');
+    if (/sha/i.test(text)) {
+      const fresh = await githubJson(path).catch(() => null);
+      if (fresh && fresh.sha) res = await put(fresh.sha);
+    }
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    let detail = text.slice(0, 180);
+    try { const j = JSON.parse(text); if (j && j.message) detail = j.message; } catch (e) {}
+    throw new Error('HTTP ' + res.status + (detail ? ' - ' + detail : ''));
+  }
   return await res.json();
 }
 
