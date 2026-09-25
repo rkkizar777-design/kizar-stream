@@ -720,17 +720,19 @@ async function writeCodesToGithub() {
   return await res.json();
 }
 
-async function activateCode(raw) {
+async function activateCode(raw, username) {
   const code = normalizeCode(raw);
   if (!code) return { ok: false, reason: 'empty' };
+  // The name is passed in by whoever is asking. On the welcome screen there is
+  // no profile yet, so reading one would fail every first sign-up.
   const profile = await getProfile();
-  if (!profile.username) return { ok: false, reason: 'noname' };
+  const who = String(username || profile.username || '').trim();
+  if (!who) return { ok: false, reason: 'noname' };
 
   // The server binds the key. The browser used to do it by writing
   // activation.json with an embedded repo token, and GitHub kept refusing
   // that write, so keys were never really bound to anybody. Everything
   // downstream that checks a key therefore had nothing to match.
-  const p2 = await getProfile();
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt) await sleep(700 * attempt);
     try {
@@ -740,8 +742,8 @@ async function activateCode(raw) {
         body: JSON.stringify({
           action: 'redeem',
           code,
-          username: profile.username,
-          ip: (await getProfile()).ip || (p2.ip || '')
+          username: who,
+          ip: profile.ip || ''
         })
       });
       const j = await res.json().catch(() => ({}));
@@ -750,15 +752,17 @@ async function activateCode(raw) {
         const tier = j.tier || 'PRO';
         const activations = Object.assign({}, profile.activations || {});
         activations.access = code;
-        await setProfile(profile.username, activations, profile.memberSince, tier);
+        await setProfile(who, activations, profile.memberSince, tier);
         STATE.codesReady = false;
         return {
           ok: true,
+          code,
           tier,
           plan: j.plan || (tier === 'FREE' ? 'free' : 'active'),
           expiresAt: j.expiresAt || ''
         };
       }
+
 
       const reason = String((j && j.error) || ('HTTP ' + res.status));
       if (res.status >= 500 && attempt < 2) continue;   // the server will retry its own write
@@ -2446,7 +2450,7 @@ async function saveWelcome() {
   const btn = $('btn-welcome');
   if (btn) btn.disabled = true;
   try {
-    const res = await activateCode(raw);
+    const res = await activateCode(raw, uname);
     if (!res.ok) {
       fail(activationMessage(res.reason, res.detail));
       return;
@@ -2508,6 +2512,7 @@ async function handleActivate() {
       invalid: ['Invalid code', false],
       used: ['Code already used', false],
       expired: ['This code has expired', false],
+      noname: ['Enter your name first', false],
       offline: ['Network error' + (res.detail ? ' (' + res.detail + ')' : ''), false],
       write_failed: ['Failed to save', false]
     };
@@ -2528,6 +2533,14 @@ async function handleActivate() {
       const msg = msgs[res.reason] || ['Could not activate', false];
       setCodeStatus(msg[0], msg[1]);
       toast(msg[0]);
+      // A reset clears the name, so activating without one is the normal next
+      // step rather than a mistake. Send them where the field actually is.
+      if (res.reason === 'noname') {
+        const wel = $('wel-username');
+        showView('welcome');
+        document.body.classList.add('onboarding');
+        setTimeout(() => { if (wel) { wel.value = ''; try { wel.focus(); } catch (e) {} } }, 60);
+      }
     }
   } finally {
     if (btn) btn.disabled = false;
