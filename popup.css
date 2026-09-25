@@ -1,3 +1,38 @@
+/* ---------------- Swap stays hidden until it is needed ---------------- */
+.swap-open {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+  background: none; border: 1px dashed rgba(148, 163, 184, .22);
+  border-radius: 12px; padding: 9px 12px; margin: 0 0 10px;
+  color: #8b93a8; font-family: inherit; font-size: 11.5px; font-weight: 600;
+  cursor: pointer;
+}
+.swap-open:hover { color: #fbbf24; border-color: rgba(251, 191, 36, .38); }
+.swap-open-chev {
+  width: 6px; height: 6px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform .18s ease;
+}
+.swap-open[aria-expanded="true"] .swap-open-chev { transform: rotate(-135deg) translateY(-1px); }
+.swap-desk[hidden] { display: none; }
+/* ---------------- Operator space at the bottom of Home ---------------- */
+/* Deliberately unlabelled: the words come from the Control Room, not here. */
+.home-space { margin: 0 0 12px; display: grid; gap: 9px; }
+.home-space[hidden] { display: none; }
+.home-space-img {
+  width: 100%; border-radius: 14px; display: block;
+  border: 1px solid var(--k-line, rgba(148, 163, 184, .16));
+  max-height: 260px; object-fit: cover;
+}
+.home-space-img[hidden] { display: none; }
+.home-space-text {
+  font-size: 12.5px; line-height: 1.55; color: #c3cad9;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--k-line, rgba(148, 163, 184, .16));
+  border-radius: 12px; padding: 10px 12px;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.home-space-text[hidden] { display: none; }
 /* ---------------- Swap picker (hand built, not a native select) ---------------- */
 .swap-picker { position: relative; flex: 1 1 auto; min-width: 0; }
 .swap-picker-btn {
@@ -63,6 +98,7 @@
 .swap-desk-controls button { flex: 0 0 auto; white-space: nowrap; }
 .swap-desk-controls button:disabled { opacity: .5; }
 .swap-desk-note { font-size: 11.5px; color: #94a3b8; margin: 9px 0 0; line-height: 1.45; }
+.swap-desk-note.bad { color: #fca5a5; font-weight: 600; }
 .swap-desk.locked { border-color: rgba(148, 163, 184, .22); filter: saturate(.5); }
 .swap-desk.locked .swap-desk-head h4 { color: #cbd5e1; }
 /* ---------------- Expired key: blocked, not signed out ---------------- */
