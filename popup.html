@@ -66,12 +66,14 @@
         <button id="btn-renew" class="cute-btn xs">Renew key</button>
       </div>
 
-      <div id="notify-bar" class="notify-bar hidden">
-        <button id="btn-notify" class="notify-trigger">
-          <span class="notify-bell" aria-hidden="true"></span>
-          <span id="notify-label">Notifications</span>
+      <div id="notify-bar" class="notify-bar">
+        <button id="btn-notify" class="notify-trigger" aria-label="Notifications" aria-expanded="false">
+          <svg class="notify-bell" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22a2.2 2.2 0 0 0 2.2-2.2H9.8A2.2 2.2 0 0 0 12 22Zm7-5.4V11a7 7 0 1 0-14 0v5.6L3.2 18.4v.9h17.6v-.9L19 16.6Z"/>
+          </svg>
           <span id="notify-count" class="notify-count hidden">0</span>
         </button>
+        <span id="notify-label" class="sr-only">Notifications</span>
         <div id="notify-list" class="notify-list hidden"></div>
       </div>
 
