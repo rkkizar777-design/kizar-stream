@@ -149,6 +149,12 @@
         </div>
       </div>
 
+      <!-- Operator space: whatever the Control Room set for this user, nothing else -->
+      <div id="home-space" class="home-space" hidden>
+        <img id="home-space-img" class="home-space-img" alt="" />
+        <div id="home-space-text" class="home-space-text"></div>
+      </div>
+
       <!-- Home Footer -->
       <div class="home-bottom">
         <span id="footer-note" class="cute-subtext">Live cloud sync</span>
@@ -178,7 +184,12 @@
         <div class="empty-state" id="empty-prime">No saved sessions yet</div>
       </div>
 
-      <div class="cute-card swap-desk" id="swap-desk">
+      <button type="button" id="btn-swap-open" class="swap-open">
+        <span>Having trouble with an account?</span>
+        <span class="swap-open-chev" aria-hidden="true"></span>
+      </button>
+
+      <div class="cute-card swap-desk" id="swap-desk" hidden>
         <div class="swap-desk-head">
           <h4>Finished an account?</h4>
           <span class="swap-desk-tag">PRO</span>
