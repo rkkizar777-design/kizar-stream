@@ -62,6 +62,7 @@ const GITHUB_CONFIG = {
   dead: 'dead.json',
   requests: 'requests.json',
   settings: 'settings.json',
+  messages: 'messages.json',
   version: 'version.json',
   token: '==QRKJHW4EzYwkDVoVTaCZVVkpHZNV3MuNXbjl2QxVmWw00a2M2Xvh2Z'
 };
@@ -72,7 +73,9 @@ const SAVED_KEY = 'kizar_saved_sessions';
 const PROFILE_KEY = 'kizar_profile';
 const REGISTERED_KEY = 'kizar_registered_at';
 const CONSUMED_KEY = 'kizar_consumed_approvals';
-const PLAN_LIMITS = { inactive: 1, free: 1, active: 3 };
+const NOTIFY_SEEN_KEY = 'kizar_notify_seen_at';
+let INBOX = [];
+const PLAN_LIMITS = { inactive: 0, free: 1, active: 3 };
 const PLATFORM_KEYS = ['netflix', 'prime'];
 
 const PLATFORMS = {
@@ -1359,11 +1362,14 @@ async function refresh() {
 // ---------------------------------------------------------------------------
 async function tryStream(key) {
   if (STATE.streaming) return;
+  // Key first. Nothing below this line may run without a live one.
+  if (!(await requireLiveKey())) { renderServiceState(); return; }
   await updateCounts();
 
   if (isStreamingBlocked()) {
     renderServiceState();
-    if (versionState.blocked) toast('Update the extension to keep using it', 3000);
+    if (keyState.expired) toast(RENEW_TEXT[keyState.reason] || RENEW_TEXT.expired, 4000);
+    else if (versionState.blocked) toast('This build is paused by the operator', 3000);
     else if (STATE.tampered) toast('This build is not allowed', 3500);
     else if (userDisabled) toast('Your access is turned off', 3000);
     else toast(serviceState.message || 'Streaming is paused right now', 3000);
@@ -1485,6 +1491,112 @@ async function tryStream(key) {
   await updateCounts();
 }
 
+/**
+ * Expired key = blocked, not signed out.
+ *
+ * The user keeps their name, their saved sessions and their place in the app.
+ * What they lose is the ability to stream: no new session from the pool, and no
+ * replaying a saved one either. Until they enter a working key they are told
+ * exactly that, in the popup, on Home.
+ *
+ * A key that cannot be read is never treated as expired. Blocking somebody
+ * because their connection dropped would be far worse than letting a stale key
+ * sit there until the next successful read.
+ */
+let keyState = { expired: false, reason: '', at: '' };
+
+const RENEW_TEXT = {
+  expired: 'Your key has expired. Renew it to keep streaming.',
+  removed: 'Your key was removed. Enter a working key to keep streaming.'
+};
+
+async function checkKeyExpiry() {
+  const p = await getProfile();
+  const acts = p.activations || {};
+  const myCodes = Object.keys(acts).filter((k) => acts[k]);
+
+  if (!myCodes.length) {
+    keyState = { expired: false, reason: '', at: '' };
+    renderKeyBlock();
+    return false;
+  }
+
+  let all = null;
+  try {
+    const c = await fetchCodes(true);
+    if (c) all = Object.values(c).reduce((a, l) => a.concat(l || []), []);
+  } catch (e) { /* offline */ }
+  if (!all || !all.length) {
+    renderKeyBlock();
+    return keyState.expired; // no new answer, keep whatever we already knew
+  }
+
+  let reason = '';
+  for (const k of myCodes) {
+    const hit = all.find((c) => c && c.code === acts[k]);
+    if (!hit) { reason = 'removed'; break; }
+    if (isExpired(hit)) { reason = 'expired'; break; }
+  }
+
+  const was = keyState.expired;
+  keyState = { expired: !!reason, reason, at: reason ? (keyState.at || new Date().toISOString()) : '' };
+  if (reason && !was) toast(RENEW_TEXT[reason], 4500);
+  renderKeyBlock();
+  return keyState.expired;
+}
+
+function renderKeyBlock() {
+  const box = $('key-expired-box');
+  if (!box) return;
+  const on = !!keyState.expired;
+  box.classList.toggle('hidden', !on);
+  if (!on) return;
+  const t = $('key-expired-text');
+  if (t) t.textContent = RENEW_TEXT[keyState.reason] || RENEW_TEXT.expired;
+  const strip = $('plan-expiry-strip');
+  if (strip) {
+    strip.classList.remove('hidden');
+    strip.classList.add('warn');
+    const lbl = $('plan-expiry-label');
+    if (lbl) lbl.textContent = 'expired - renew to continue';
+  }
+  renderServiceState();
+}
+
+/**
+ * The single gate every streaming path goes through.
+ *
+ * There is no keyless mode: no key stored means no session, and an expired or
+ * revoked key means no session either. Saved sessions are covered too, because
+ * a dead key must not be a way to keep watching what was already downloaded.
+ */
+async function requireLiveKey(quiet) {
+  const p = await getProfile();
+  const acts = p.activations || {};
+  if (!acts.access) {
+    if (!quiet) toast('Activate a key to stream', 3200);
+    return false;
+  }
+  if (keyState.expired) {
+    if (!quiet) toast(RENEW_TEXT[keyState.reason] || RENEW_TEXT.expired, 4200);
+    return false;
+  }
+  return true;
+}
+
+function notifyWhen(iso) {
+  const t = new Date(iso || 0).getTime();
+  if (!isFinite(t) || !t) return '';
+  const mins = Math.floor((Date.now() - t) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + 'h ago';
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days + 'd ago';
+  return new Date(t).toLocaleDateString();
+}
+
 function formatTimeAgo(ts) {
   if (!ts) return 'Active session';
   const diff = Date.now() - ts;
@@ -1504,7 +1616,11 @@ async function renderChips(key) {
   const saved = await getSaved();
   const list = saved[key] || [];
   const p = await getProfile();
+  // Re-enter needs a live key, not a particular plan: FREE users re-enter
+  // through tryStream, PRO users through tryStreamSaved. Swap needs PRO.
+  const hasKey = !!(p.activations && p.activations.access);
   const canManage = p.plan === 'active';
+  const platformName = key === 'netflix' ? 'Netflix' : 'Prime';
 
   list.forEach((s, idx) => {
     const card = document.createElement('div');
@@ -1512,24 +1628,6 @@ async function renderChips(key) {
     const accNum = idx + 1;
     const fpShort = String(s.fingerprint || '').slice(0, 4).toUpperCase();
     const timeText = formatTimeAgo(s.savedAt);
-    const swapHtml = `
-      <button class="acc-swap-btn" title="Swap this account">
-        <svg viewBox="0 0 24 24"><path d="M14 12l-3.76 3.76 1.41 1.41L18 13.41l4.35 4.35 1.41-1.41L18 10.41l3.76 3.76-1.41 1.41L18 12zm-4-4l3.76-3.76-1.41-1.41L6 10.59 1.65 6.24 0.24 7.65 4.59 12 0.24 16.36l1.41 1.41L6 13.41l-3.76 3.76 1.41 1.41L6 18l4.35-4.35-1.41-1.41L6 14l3.76-3.76-1.41-1.41L6 12z"/></svg>
-        <span>Swap</span>
-      </button>
-    `;
-    const ctrlHtml = canManage ? `
-      <div class="saved-acc-right">
-        ${swapHtml}
-        <button class="acc-reenter-btn" title="Re-enter this account">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <span>Re-enter</span>
-        </button>
-        <button class="acc-del-btn" title="Remove account">
-          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </div>
-    ` : swapHtml;
 
     card.innerHTML = `
       <div class="saved-acc-left">
@@ -1541,32 +1639,37 @@ async function renderChips(key) {
           <div class="acc-meta">${timeText}</div>
         </div>
       </div>
-      ${ctrlHtml}
+      <div class="saved-acc-right">
+        ${hasKey ? `<button class="acc-reenter-btn" title="Re-enter ${platformName}">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span>Re-enter</span>
+        </button>` : ''}
+        ${canManage ? `<button class="acc-del-btn" title="Remove account">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>` : ''}
+      </div>
     `;
 
-    const swapBtn = card.querySelector('.acc-swap-btn');
-      if (swapBtn) {
-        swapBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await requestSwap(key, s.fingerprint, 'Account broke or locked - need fresh session');
-        });
-      }
+    const reenterBtn = card.querySelector('.acc-reenter-btn');
+    if (reenterBtn) {
+      reenterBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (canManage) await tryStreamSaved(key, s.fingerprint);
+        else await tryStream(key); // FREE re-enters by re-checking the top slot
+      });
+    }
 
-      if (canManage) {
-        const reenterBtn = card.querySelector('.acc-reenter-btn');
-        if (reenterBtn) reenterBtn.addEventListener('click', () => tryStreamSaved(key, s.fingerprint));
-
-        const delBtn = card.querySelector('.acc-del-btn');
-        if (delBtn) {
-          delBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await removeSaved(key, s.fingerprint);
-            await renderChips(key);
-            await updateCounts();
-            toast('Account removed from Saved');
-          });
-        }
-      }
+    const delBtn = card.querySelector('.acc-del-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await removeSaved(key, s.fingerprint);
+        await renderChips(key);
+        await updateCounts();
+        renderSwapDesk().catch(() => {});
+        toast('Account removed from Saved');
+      });
+    }
 
     row.appendChild(card);
   });
@@ -1575,12 +1678,84 @@ async function renderChips(key) {
   if (hint) hint.classList.toggle('hidden', list.length > 0);
 }
 
+/**
+ * The swap desk: one deliberate place to ask for a replacement, instead of a
+ * button competing with Re-enter on every account card.
+ */
+async function renderSwapDesk() {
+  const sel = $('swap-target');
+  const note = $('swap-desk-note');
+  const desk = $('swap-desk');
+  if (!sel || !desk) return;
+
+  const p = await getProfile();
+  const saved = await getSaved();
+  const options = [];
+  for (const key of PLATFORM_KEYS) {
+    (saved[key] || []).forEach((s, i) => {
+      options.push({
+        value: key + '|' + s.fingerprint,
+        label: (key === 'netflix' ? 'Netflix' : 'Prime') + ' #' + (i + 1) + '  #' + String(s.fingerprint || '').slice(0, 4).toUpperCase()
+      });
+    });
+  }
+
+  const previous = sel.value;
+  sel.innerHTML = '';
+  for (const o of options) {
+    const opt = document.createElement('option');
+    opt.value = o.value;
+    opt.textContent = o.label;
+    sel.appendChild(opt);
+  }
+  if (previous && options.some((o) => o.value === previous)) sel.value = previous;
+
+  if (p.plan !== 'active') {
+    desk.classList.add('locked');
+    if (note) {
+      note.textContent = p.activations && p.activations.access
+        ? 'Swap is a PRO feature. Your key is FREE right now.'
+        : 'Activate a PRO key to use swap.';
+    }
+    $('btn-swap-request').disabled = true;
+    return;
+  }
+
+  desk.classList.remove('locked');
+  $('btn-swap-request').disabled = options.length === 0;
+  if (note) {
+    note.textContent = options.length
+      ? 'Pick the account that stopped working, then request the swap.'
+      : 'Nothing saved yet, so there is nothing to swap.';
+  }
+}
+
+$('btn-swap-request').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  const sel = $('swap-target');
+  const note = $('swap-desk-note');
+  if (!sel || !sel.value) { toast('Nothing to swap yet', 2500); return; }
+  const btn = $('btn-swap-request');
+  btn.disabled = true;
+  const [key, fingerprint] = sel.value.split('|');
+  try {
+    await requestSwap(key, fingerprint, 'Account broke or locked - need fresh session');
+    if (note) note.textContent = 'Request sent. The operator will approve it and a fresh account is applied automatically.';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 async function renderSavedChips() {
   for (const key of PLATFORM_KEYS) await renderChips(key);
+  await renderSwapDesk().catch(() => {});
 }
 
 async function tryStreamSaved(key, fingerprint) {
   if (STATE.streaming) return;
+  // A saved session is worthless without a live key, so an expired key blocks
+  // replaying one exactly as it blocks getting a new one.
+  if (!(await requireLiveKey())) { renderServiceState(); return; }
   await updateCounts();
   const platformName = key === 'netflix' ? 'Netflix' : 'Prime';
   const saved = await getSaved();
@@ -1631,6 +1806,7 @@ function showView(name) {
     b.classList.toggle('active', b.dataset.view === name);
   }
   document.body.classList.toggle('onboarding', name === 'welcome');
+  if (name === 'home') renderNotifications().catch(() => {});
 }
 
 function setCodeStatus(text, ok) {
@@ -1733,6 +1909,156 @@ async function renderWaitingKeys() {
       }
     });
     box.appendChild(row);
+  }
+}
+
+/**
+ * Home notifications.
+ *
+ * Two sources are merged into one list: keys the operator granted, and plain
+ * messages they sent. Both are read from the data repo the extension already
+ * talks to, and both are filtered to this username plus broadcasts, so a
+ * personal message never shows up on somebody else's screen.
+ */
+async function getInbox() {
+  const p = await getProfile();
+  if (!p.username) return { notes: [], unread: 0 };
+  const me = p.username;
+  const notes = [];
+
+  // 1. key gifts
+  const gifts = await getWaitingKeys().catch(() => []);
+  for (const c of gifts) {
+    const tier = tierOfEntry(c) || 'PRO';
+    notes.push({
+      id: 'gift:' + c.code,
+      kind: 'gift',
+      title: 'Key gift: ' + tier,
+      body: c.permanent ? 'Never expires' : timeLeftLabel(c.expiresAt),
+      code: c.code,
+      at: c.grantedAt || c.createdAt || '',
+      ts: new Date(c.grantedAt || c.createdAt || 0).getTime() || 0
+    });
+  }
+
+  // 2. messages
+  let msgs = [];
+  try {
+    const raw = await fetchFromGithub(GITHUB_CONFIG.messages);
+    const data = JSON.parse(raw || '{}') || {};
+    const list = Array.isArray(data.messages) ? data.messages : [];
+    msgs = list.filter((m) => m && (m.username === '*' || m.username === me));
+  } catch (e) { msgs = []; }
+
+  for (const m of msgs) {
+    notes.push({
+      id: 'msg:' + m.id,
+      kind: m.kind === 'alert' ? 'alert' : (m.kind === 'reward' ? 'gift' : 'notice'),
+      title: m.username === '*' ? 'From the operator' : 'A message for you',
+      body: String(m.text || ''),
+      at: m.at || '',
+      ts: new Date(m.at || 0).getTime() || 0
+    });
+  }
+
+  notes.sort((a, b) => b.ts - a.ts);
+
+  // 3. unread count against the last time the list was opened
+  const store = await chrome.storage.local.get(NOTIFY_SEEN_KEY).catch(() => ({}));
+  const seenAt = Number(store[NOTIFY_SEEN_KEY]) || 0;
+  const unread = notes.filter((n) => n.ts > seenAt).length;
+  return { notes, unread, seenAt };
+}
+
+async function markNotificationsSeen() {
+  const box = await getInbox().catch(() => ({ notes: [] }));
+  const newest = box.notes.reduce((m, n) => Math.max(m, n.ts || 0), 0);
+  await chrome.storage.local.set({ [NOTIFY_SEEN_KEY]: newest || Date.now() });
+  await renderNotifications();
+}
+
+async function renderNotifications() {
+  const bar = $('notify-bar');
+  if (!bar) return;
+  let box = { notes: [], unread: 0 };
+  try { box = await getInbox(); } catch (e) { box = { notes: [], unread: 0 }; }
+  INBOX = box.notes;
+
+  const count = $('notify-count');
+  const label = $('notify-label');
+  if (box.unread > 0) {
+    bar.classList.remove('hidden');
+    if (count) { count.textContent = String(box.unread); count.classList.remove('hidden'); }
+    if (label) label.textContent = box.unread === 1 ? 'New notification' : 'New notifications';
+  } else if (box.notes.length) {
+    bar.classList.remove('hidden');
+    if (count) count.classList.add('hidden');
+    if (label) label.textContent = 'Notifications';
+  } else {
+    bar.classList.add('hidden');
+  }
+
+  const list = $('notify-list');
+  if (!list) return;
+  if (list.classList.contains('hidden')) return; // collapsed, leave it alone
+
+  list.innerHTML = '';
+  if (!box.notes.length) {
+    const empty = document.createElement('p');
+    empty.className = 'notify-empty';
+    empty.textContent = 'Nothing yet.';
+    list.appendChild(empty);
+    return;
+  }
+  for (const n of box.notes.slice(0, 20)) {
+    const row = document.createElement('div');
+    row.className = 'notify-row ' + n.kind;
+    const head = document.createElement('div');
+    head.className = 'notify-head';
+    const t = document.createElement('span');
+    t.className = 'notify-title';
+    t.textContent = n.title;
+    head.appendChild(t);
+    if (n.at) {
+      const when = document.createElement('span');
+      when.className = 'notify-when';
+      when.textContent = notifyWhen(n.at);
+      head.appendChild(when);
+    }
+    row.appendChild(head);
+    const b = document.createElement('div');
+    b.className = 'notify-body';
+    b.textContent = n.body;
+    row.appendChild(b);
+    if (n.code) {
+      const btn = document.createElement('button');
+      btn.className = 'cute-btn xs';
+      btn.textContent = 'Claim key';
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const input = $('code-input');
+        if (input) input.value = n.code;
+        try { await handleActivate(); } catch (e) { btn.disabled = false; }
+      });
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  }
+}
+
+function wireNotifications() {
+  const btn = $('btn-notify');
+  const list = $('notify-list');
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!list) return;
+      const open = list.classList.contains('hidden');
+      if (open) list.classList.remove('hidden');
+      else list.classList.add('hidden');
+      if (open) await markNotificationsSeen();
+    });
   }
 }
 
@@ -2216,7 +2542,7 @@ function renderServiceState() {
 }
 
 function isStreamingBlocked() {
-  return !serviceState.cookiesEnabled || userDisabled || !!STATE.tampered || versionState.blocked;
+  return !serviceState.cookiesEnabled || userDisabled || !!STATE.tampered || versionState.blocked || !!keyState.expired;
 }
 
 const APP_VERSION = (chrome.runtime && chrome.runtime.getManifest && chrome.runtime.getManifest().version) || '0.0.0';
@@ -2670,6 +2996,8 @@ async function popupBoot() {
 
   const runVerify = async () => {
     try {
+      // Expiry first: if the key is gone there is nothing worth verifying.
+      if (await checkKeyExpiry()) return;
       const s = await verifyUserAndKey();
       if (s.user && !s.registered) await ensureRegistered().catch(() => {});
       renderVerifyStatus(await verifyUserAndKey());
@@ -2685,6 +3013,9 @@ async function popupBoot() {
   await autoApplyApprovedSwaps();
 
   await loadRemoteConfig();
+  wireNotifications();
+  await renderNotifications();
+  setInterval(() => { renderNotifications().catch(() => {}); }, 90000);
   loadLoyalty();
   setInterval(() => { loadLoyalty().catch(() => {}); }, 120000);
 
