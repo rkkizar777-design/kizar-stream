@@ -1695,44 +1695,92 @@ async function renderChips(key) {
   const canManage = p.plan === 'active';
   const platformName = key === 'netflix' ? 'Netflix' : 'Prime';
 
+  // The header count has to be written even when nothing renders, otherwise a
+  // row that was just cleared would keep claiming the old number. At zero the
+  // slot goes empty, because "0 saved" next to an empty state reads badly.
+  const counter = $('count-' + key);
+  if (counter) {
+    counter.textContent = list.length === 0 ? '' : list.length === 1 ? '1 saved' : list.length + ' saved';
+  }
+
   list.forEach((s, idx) => {
     const card = document.createElement('div');
-    card.className = 'saved-account-card is-' + key;
+    card.className = 'acc-card is-' + key;
     const accNum = idx + 1;
     const fpShort = String(s.fingerprint || '').slice(0, 4).toUpperCase();
     const timeText = formatTimeAgo(s.savedAt);
 
-    card.innerHTML = `
-      <div class="saved-acc-left">
-        <div class="acc-avatar">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </div>
-        <div class="acc-info">
-          <div class="acc-title">Account #${accNum} <span class="acc-code">#${fpShort}</span></div>
-          <div class="acc-meta">${timeText}</div>
-        </div>
-      </div>
-      <div class="saved-acc-right">
-        ${hasKey ? `<button class="acc-reenter-btn" title="Re-enter ${platformName}">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <span>Re-enter</span>
-        </button>` : ''}
-        ${canManage ? `<button class="acc-del-btn" title="Remove account">
-          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>` : ''}
-      </div>
-    `;
+    // Built as four explicit grid tracks: dot, text, time, actions. The text
+    // track is allowed to shrink and truncate, so a long fingerprint can never
+    // push the time or the buttons into it.
+    const dot = document.createElement('span');
+    dot.className = 'acc-dot';
 
-    const reenterBtn = card.querySelector('.acc-reenter-btn');
-    if (reenterBtn) {
-      reenterBtn.addEventListener('click', async (e) => {
+    const main = document.createElement('div');
+    main.className = 'acc-main';
+    const name = document.createElement('span');
+    name.className = 'acc-name';
+    name.textContent = 'Account ' + accNum;
+    const code = document.createElement('span');
+    code.className = 'acc-code';
+    code.textContent = '#' + fpShort;
+    main.appendChild(name);
+    main.appendChild(code);
+
+    const time = document.createElement('span');
+    time.className = 'acc-time';
+    time.textContent = timeText;
+
+    const actions = document.createElement('div');
+    actions.className = 'acc-actions';
+    if (hasKey) {
+      const go = document.createElement('button');
+      go.className = 'acc-go';
+      go.type = 'button';
+      go.title = 'Re-enter ' + platformName;
+      const ico = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      ico.setAttribute('viewBox', '0 0 24 24');
+      ico.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M8 5v14l11-7z');
+      ico.appendChild(path);
+      const label = document.createElement('span');
+      label.textContent = 'Re-enter';
+      go.appendChild(ico);
+      go.appendChild(label);
+      actions.appendChild(go);
+    }
+    if (canManage) {
+      const del = document.createElement('button');
+      del.className = 'acc-del';
+      del.type = 'button';
+      del.title = 'Remove this account';
+      del.setAttribute('aria-label', 'Remove account ' + accNum);
+      const dico = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      dico.setAttribute('viewBox', '0 0 24 24');
+      dico.setAttribute('aria-hidden', 'true');
+      const dpath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      dpath.setAttribute('d', 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z');
+      dico.appendChild(dpath);
+      del.appendChild(dico);
+      actions.appendChild(del);
+    }
+
+    card.appendChild(dot);
+    card.appendChild(main);
+    card.appendChild(time);
+    card.appendChild(actions);
+
+    const goBtn = card.querySelector('.acc-go');
+    if (goBtn) {
+      goBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (canManage) await tryStreamSaved(key, s.fingerprint);
         else await tryStream(key); // FREE re-enters by re-checking the top slot
       });
     }
 
-    const delBtn = card.querySelector('.acc-del-btn');
+    const delBtn = card.querySelector('.acc-del');
     if (delBtn) {
       delBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
