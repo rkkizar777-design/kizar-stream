@@ -189,7 +189,13 @@
           blocked for everyone at the same time.
         </p>
         <div class="swap-desk-controls">
-          <select id="swap-target" class="cute-input"></select>
+          <div class="swap-picker" id="swap-picker">
+            <button type="button" id="swap-target-btn" class="swap-picker-btn" aria-expanded="true">
+              <span id="swap-target-label">No accounts saved</span>
+              <span class="swap-picker-chev" aria-hidden="true"></span>
+            </button>
+            <div id="swap-target-list" class="swap-picker-list" role="listbox"></div>
+          </div>
           <button id="btn-swap-request" class="cute-btn gold">Request swap</button>
         </div>
         <p class="swap-desk-note" id="swap-desk-note">Nothing saved yet, so there is nothing to swap.</p>
