@@ -184,19 +184,17 @@ function countUp(el, target) {
   tick();
 }
 
-function showProgress(show, text, pct) {
-  const prog = $('stream-progress');
-  if (!prog) return;
-  prog.classList.toggle('hidden', !show);
+// One quiet line of text. The percentage and gradient bar are gone: they said
+// nothing the sentence did not already say, and they made a routine check look
+// like an event.
+function showProgress(show, text) {
+  const line = $('stream-progress');
+  if (!line) return;
+  line.classList.toggle('hidden', !show);
   if (text) {
     const t = $('progress-text');
     if (t) t.textContent = text;
   }
-  const p = pct || 0;
-  const fill = $('progress-fill');
-  if (fill) fill.style.width = p + '%';
-  const pctEl = $('progress-pct');
-  if (pctEl) pctEl.textContent = p > 0 ? p + '%' : '0%';
 }
 
 // ---------------------------------------------------------------------------
@@ -1695,7 +1693,7 @@ async function renderChips(key) {
 
   list.forEach((s, idx) => {
     const card = document.createElement('div');
-    card.className = 'saved-account-card';
+    card.className = 'saved-account-card is-' + key;
     const accNum = idx + 1;
     const fpShort = String(s.fingerprint || '').slice(0, 4).toUpperCase();
     const timeText = formatTimeAgo(s.savedAt);
