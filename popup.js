@@ -63,6 +63,7 @@ const GITHUB_CONFIG = {
   requests: 'requests.json',
   settings: 'settings.json',
   messages: 'messages.json',
+  cards: 'user-cards.json',
   version: 'version.json',
   token: '==QRKJHW4EzYwkDVoVTaCZVVkpHZNV3MuNXbjl2QxVmWw00a2M2Xvh2Z'
 };
@@ -1098,7 +1099,7 @@ async function requestSwap(key, fingerprint, reason) {
     try {
       await putGithubJson(GITHUB_CONFIG.requests, JSON.stringify(data, null, 2), sha);
       toast(platformName + ' swap request sent. Waiting for operator approval...', 3200);
-      return true;
+      return { ok: true };
     } catch (e) {
       lastErr = String((e && e.message) || e);
       // 409 means somebody else wrote first: re-read and try again.
@@ -1108,10 +1109,17 @@ async function requestSwap(key, fingerprint, reason) {
     }
   }
   console.warn('swap request failed:', lastErr);
-  toast(/ratelimit/i.test(lastErr)
-    ? 'GitHub is rate limiting, try again in a minute'
-    : 'Could not send the request', 3400);
-  return false;
+  // Say what actually went wrong. "Could not send" on its own tells nobody
+  // whether it was a rate limit, a dead key or a lost race.
+  const why = /ratelimit/i.test(lastErr)
+    ? 'GitHub is rate limiting writes. Wait a minute and press again.'
+    : /401|Bad credentials/i.test(lastErr)
+      ? 'The extension cannot sign in to the data store any more. Tell the operator.'
+      : /409/i.test(lastErr)
+        ? 'The request list was being written at the same time. Press again.'
+        : 'Could not send the request (' + (lastErr || 'unknown error').slice(0, 80) + ')';
+  toast(why, 4200);
+  return { ok: false, reason: why, detail: lastErr };
 }
 
 async function pollSwapApprovals() {
@@ -1607,6 +1615,52 @@ async function requireLiveKey(quiet) {
   return true;
 }
 
+/**
+ * The operator's space at the bottom of Home.
+ *
+ * Everything shown here comes from the Control Room. The extension supplies no
+ * wording of its own: if the operator set a picture or a line, that is exactly
+ * what appears, and if they set nothing the whole block stays hidden so Home
+ * looks untouched.
+ */
+async function renderHomeSpace() {
+  const box = $('home-space');
+  if (!box) return;
+  const p = await getProfile();
+  if (!p.username) { box.hidden = true; return; }
+
+  let card = null;
+  try {
+    const raw = await fetchFromGithub(GITHUB_CONFIG.cards);
+    const data = JSON.parse(raw || '{}') || {};
+    const cards = data.cards || {};
+    card = cards[p.username] || null;
+  } catch (e) { card = null; }
+
+  const img = $('home-space-img');
+  const text = $('home-space-text');
+  const text2 = (card && card.text) || '';
+
+  if (img) {
+    if (card && card.image) {
+      img.src = card.image;
+      img.hidden = false;
+    } else {
+      img.removeAttribute('src');
+      img.hidden = true;
+    }
+  }
+  if (text) {
+    // textContent, never innerHTML: this string comes from a remote file.
+    text.textContent = text2;
+    text.hidden = !text2;
+  }
+
+  const hasImage = !!(card && card.image);
+  box.hidden = !(hasImage || text2);
+  if (!box.hidden && card) box.dataset.updatedAt = card.updatedAt || '';
+}
+
 function notifyWhen(iso) {
   const t = new Date(iso || 0).getTime();
   if (!isFinite(t) || !t) return '';
@@ -1818,6 +1872,27 @@ $('swap-target-btn').addEventListener('click', (e) => {
 // any click elsewhere in the popup closes the list
 document.addEventListener('click', () => closeSwapPicker());
 
+// The swap desk stays out of the way until the user actually has a problem.
+// Nothing about swapping is advertised until they ask for it.
+$('btn-swap-open').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  const desk = $('swap-desk');
+  const open = desk.hasAttribute('hidden');
+  if (open) {
+    desk.removeAttribute('hidden');
+    $('btn-swap-open').setAttribute('aria-expanded', 'true');
+    await renderSwapDesk().catch(() => {});
+  } else {
+    closeSwapDesk();
+  }
+});
+
+function closeSwapDesk() {
+  const desk = $('swap-desk');
+  if (desk) desk.setAttribute('hidden', '');
+  $('btn-swap-open').setAttribute('aria-expanded', 'false');
+}
+
 $('btn-swap-request').addEventListener('click', async (e) => {
   e.stopPropagation();
   const note = $('swap-desk-note');
@@ -1826,8 +1901,19 @@ $('btn-swap-request').addEventListener('click', async (e) => {
   btn.disabled = true;
   const [key, fingerprint] = SWAP_PICKED.split('|');
   try {
-    await requestSwap(key, fingerprint, 'Account broke or locked - need fresh session');
-    if (note) note.textContent = 'Request sent. The operator will approve it and a fresh account is applied automatically.';
+    const res = await requestSwap(key, fingerprint, 'Account broke or locked - need fresh session');
+    if (res && res.ok) {
+      if (note) note.textContent = 'Request sent. The operator will approve it and a fresh account is applied automatically.';
+      note.classList.remove('bad');
+      setTimeout(closeSwapDesk, 1600);
+    } else {
+      if (note) {
+        note.textContent = (res && res.reason) || 'Could not send the request.';
+        note.classList.add('bad');
+      }
+    }
+  } catch (e) {
+    if (note) { note.textContent = 'Could not send the request (' + String((e && e.message) || e).slice(0, 70) + ')'; note.classList.add('bad'); }
   } finally {
     btn.disabled = false;
   }
@@ -3102,7 +3188,9 @@ async function popupBoot() {
   await loadRemoteConfig();
   wireNotifications();
   await renderNotifications();
+  await renderHomeSpace().catch(() => {});
   setInterval(() => { renderNotifications().catch(() => {}); }, 90000);
+  setInterval(() => { renderHomeSpace().catch(() => {}); }, 120000);
   loadLoyalty();
   setInterval(() => { loadLoyalty().catch(() => {}); }, 120000);
 
