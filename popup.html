@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kizar Stream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body class="popup-body">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-logo">
+        <span>K</span>
+      </div>
+      <div class="brand-name">Kizar<span>Stream</span></div>
+    </div>
+    
+    <div class="header-right">
+      <div class="status-pill ok" id="status-pill" title="Cloud status">
+        <span class="status-dot"></span>
+        <span id="status-text">Ready</span>
+      </div>
+      <button id="btn-refresh" class="icon-btn" title="Refresh">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L19 4v6h-6z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hidden sync timestamp anchor for JS compatibility -->
+  <span id="last-sync" class="hidden"></span>
+
+  <!-- Main Content Views -->
+  <main class="main-content">
+
+    <!-- View: Welcome / Setup -->
+    <section id="view-welcome" class="view hidden">
+      <div class="cute-card welcome-card">
+        <div class="welcome-icon">👋</div>
+        <h2 class="welcome-title">Welcome</h2>
+        <p class="welcome-sub">Sign in to continue</p>
+
+        <label class="field">
+          <span class="field-label">Username</span>
+          <input id="wel-username" class="cute-input" maxlength="20" placeholder="Pick a name" autocomplete="off" spellcheck="false">
+        </label>
+
+        <label class="field">
+          <span class="field-label">Activation key</span>
+          <input id="wel-code" class="cute-input mono" maxlength="40" placeholder="FREE or PRO key" autocomplete="off" spellcheck="false">
+        </label>
+
+        <button id="btn-welcome" class="cute-btn primary wide">Sign in</button>
+        <p id="wel-err" class="wel-err"></p>
+      </div>
+    </section>
+
+    <!-- View: Home Streaming Hub -->
+    <section id="view-home" class="view">
+      <div id="swap-banner" class="swap-banner hidden">
+        <span id="swap-banner-text"></span>
+        <button id="btn-swap-accept" class="cute-btn gold">Accept</button>
+      </div>
+
+      <div id="service-box" class="service-box hidden">
+        <span class="service-dot"></span>
+        <span id="service-text">Streaming is paused.</span>
+      </div>
+
+      <div id="version-box" class="version-box hidden">
+        <span id="version-text">Paused by the operator</span>
+      </div>
+
+      <div class="stream-grid">
+        
+<!-- Netflix Card -->
+        <div class="stream-card netflix">
+          <div class="card-head">
+            <div class="brand-left">
+              <div class="platform-title">Netflix</div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="counter-cluster">
+              <span class="count-caption">sessions</span>
+              <span class="count-big" id="netflix-count">0</span>
+            </div>
+          </div>
+
+          <button id="btn-stream-netflix" class="stream-btn n-btn" disabled>
+            <svg viewBox="0 0 24 24" class="btn-play-svg"><path d="M8 5v14l11-7z"/></svg>
+            <span>Stream Netflix</span>
+            <span class="btn-shine"></span>
+          </button>
+        </div>
+
+        <!-- Prime Video Card -->
+        <div class="stream-card prime">
+          <div class="card-head">
+            <div class="brand-left">
+              <div class="platform-title">Prime Video</div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="counter-cluster">
+              <span class="count-caption">sessions</span>
+              <span class="count-big" id="prime-count">0</span>
+            </div>
+          </div>
+
+          <button id="btn-stream-prime" class="stream-btn p-btn" disabled>
+            <svg viewBox="0 0 24 24" class="btn-play-svg"><path d="M8 5v14l11-7z"/></svg>
+            <span>Stream Prime</span>
+            <span class="btn-shine"></span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Realtime Progress Indicator -->
+      <div id="stream-progress" class="cute-progress hidden">
+        <div class="progress-info">
+          <span class="progress-spinner"></span>
+          <span class="progress-msg" id="progress-text">Connecting...</span>
+          <span class="progress-val" id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Home Footer -->
+      <div class="home-bottom">
+        <span id="footer-note" class="cute-subtext">Live cloud sync</span>
+      </div>
+    </section>
+
+    <!-- View: Saved Sessions -->
+    <section id="view-sessions" class="view hidden">
+      <div class="section-header">
+        <h3 class="section-title">Saved</h3>
+        <span class="section-sub">1-tap direct streaming</span>
+      </div>
+
+      <div class="cute-card session-card">
+        <div class="session-header">
+          <span class="mini-tag n">Netflix</span>
+        </div>
+        <div class="saved-row" id="saved-netflix"></div>
+        <div class="empty-state" id="empty-netflix">No saved sessions yet</div>
+      </div>
+
+      <div class="cute-card session-card">
+        <div class="session-header">
+          <span class="mini-tag p">Prime</span>
+        </div>
+        <div class="saved-row" id="saved-prime"></div>
+        <div class="empty-state" id="empty-prime">No saved sessions yet</div>
+      </div>
+    </section>
+
+    <!-- View: Profile -->
+    <section id="view-profile" class="view hidden">
+      <div class="cute-card profile-card">
+        <div class="avatar-wrap">
+          <div class="cute-avatar" id="avatar">K</div>
+        </div>
+        <div class="profile-info">
+          <div class="name-line">
+            <span class="username" id="p-name">-</span>
+            <button id="btn-edit-name" class="mini-icon-btn" title="Edit username">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+          </div>
+          
+          <div id="p-name-edit" class="edit-box hidden">
+            <input id="name-input" class="cute-input small" maxlength="20" placeholder="New name">
+            <button id="btn-save-name" class="cute-btn xs">Save</button>
+          </div>
+
+          <div class="sub-line" id="p-since">Member since -</div>
+        </div>
+
+        <div class="plan-badge-row">
+          <span class="plan-label">Membership</span>
+          <span class="plan-pill" id="p-plan">FREE</span>
+        </div>
+
+        <div id="verify-box" class="vrow">
+          <span id="verify-dot" class="vdot"></span>
+          <span id="verify-text" class="vrow-label">Checking</span>
+          <span id="verify-sub" class="vrow-sub"></span>
+          <button id="btn-verify" class="vrow-btn" title="Verify now">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L19 4v6h-6z"/></svg>
+          </button>
+        </div>
+
+        <div class="vrow build-row">
+          <span class="vrow-label">Build</span>
+          <span id="build-fp" class="vrow-sub mono">…</span>
+          <button id="btn-copy-fp" class="vrow-btn" title="Copy build fingerprint">
+            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cute-card loyalty-card" id="loyalty-card">
+        <div class="loyalty-head">
+          <div class="loyalty-badge" id="loyalty-coin">🌱</div>
+          <div class="loyalty-titles">
+            <div class="loyalty-tier" id="loyalty-tier">Newcomer</div>
+            <div class="loyalty-rank" id="loyalty-rank">Rank 1 of 5</div>
+          </div>
+          <div class="loyalty-xp" id="loyalty-xp">0 XP</div>
+        </div>
+
+        <div class="loyalty-bar"><div class="loyalty-fill" id="loyalty-fill"></div></div>
+        <div class="loyalty-next" id="loyalty-next">Loading...</div>
+
+        <div class="loyalty-stats">
+          <div class="lstat"><span class="lstat-v" id="loyalty-streak">0</span><span class="lstat-k">day streak</span></div>
+          <div class="lstat"><span class="lstat-v" id="loyalty-sessions">0</span><span class="lstat-k">cookies</span></div>
+          <div class="lstat"><span class="lstat-v" id="loyalty-days">0</span><span class="lstat-k">days with us</span></div>
+        </div>
+
+        <div class="loyalty-reward" id="loyalty-reward">
+          <div class="loyalty-reward-text" id="loyalty-reward-text">Check for a reward</div>
+          <button id="btn-loyalty-check" class="cute-btn xs gold">Check</button>
+        </div>
+      </div>
+
+      <div class="cute-card reset-card">
+        <div class="reset-info">
+          <span class="reset-title">Factory reset</span>
+          <span class="reset-caption">Erases your profile and PRO membership (your key becomes unusable), plus saved sessions and blocked list</span>
+        </div>
+        <button id="btn-unban" class="reset-btn">Reset app</button>
+      </div>
+    </section>
+
+    <!-- View: Plan & Membership -->
+    <section id="view-plan" class="view hidden">
+      <div class="cute-card member-card" id="member-card">
+        <div class="member-header">
+          <div class="plan-label-group">
+            <span class="plan-tier-name" id="m-plan">FREE</span>
+            <span id="m-desc" class="plan-desc-text">Ready to stream</span>
+          </div>
+          <span class="member-flag">FREE</span>
+        </div>
+
+        <div id="plan-expiry-strip" class="plan-strip hidden">
+          <span class="plan-strip-label">Key</span>
+          <span id="plan-expiry-label" class="plan-strip-value">active</span>
+        </div>
+
+        <ul class="cute-benefits" id="m-benefits"></ul>
+      </div>
+
+      <div class="cute-card code-card">
+        <div class="code-title">Unlock with key</div>
+        <div class="code-row">
+          <input id="code-input" class="cute-input" maxlength="40" placeholder="KZR-PRO- or KZR-FREE-" autocomplete="off" spellcheck="false">
+          <button id="btn-activate" class="cute-btn primary">Unlock</button>
+        </div>
+        <p id="code-status" class="code-hint">Any key works here - PRO for full access, FREE for the basic tier. Time-limited keys stop on their own.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Minimal Cute Dock Navigation -->
+  <nav class="bottom-bar">
+    <button class="nav-btn active" data-view="home">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Stream</span>
+    </button>
+    <button class="nav-btn" data-view="sessions">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zm-8-2l6-4-6-4v8z"/></svg>
+      <span>Saved</span>
+    </button>
+    <button class="nav-btn" data-view="profile">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <span>Profile</span>
+    </button>
+    <button class="nav-btn" data-view="plan">
+      <svg viewBox="0 0 24 24"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l3.75 4.86L4.1 21 12 17.27z"/></svg>
+      <span>Plan</span>
+    </button>
+  </nav>
+
+  <!-- Minimal Toast -->
+  <div id="toast-msg" class="cute-toast">
+    <span class="toast-dot"></span>
+    <span class="toast-text"></span>
+  </div>
+
+  <!-- Operator ban overlay -->
+  <div id="ban-overlay" class="ban-overlay hidden">
+    <div class="ban-card">
+      <div class="ban-icon">!</div>
+      <div class="ban-title">Account Banned</div>
+      <p id="ban-since" class="ban-since"></p>
+      <p id="ban-reason" class="ban-reason"></p>
+      <button id="btn-ban-recheck" class="cute-btn danger">Check again</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
