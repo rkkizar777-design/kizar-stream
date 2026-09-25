@@ -1,3 +1,48 @@
+/* ---------------- Swap picker (hand built, not a native select) ---------------- */
+.swap-picker { position: relative; flex: 1 1 auto; min-width: 0; }
+.swap-picker-btn {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  background: rgba(0, 0, 0, .3); color: #e8eaf2;
+  border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 11px; padding: 9px 11px;
+  font-family: inherit; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; text-align: left;
+}
+.swap-picker-btn:hover:not(:disabled) { border-color: rgba(251, 191, 36, .45); }
+.swap-picker-btn:disabled { opacity: .5; cursor: not-allowed; }
+.swap-picker-btn > span:first-child {
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.swap-picker-chev {
+  flex: 0 0 auto; width: 7px; height: 7px;
+  border-right: 1.7px solid #fbbf24; border-bottom: 1.7px solid #fbbf24;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .18s ease;
+}
+.swap-picker-btn[aria-expanded="true"] .swap-picker-chev { transform: rotate(-135deg) translateY(-2px); }
+.swap-picker-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 5px); z-index: 40;
+  background: #141824; border: 1px solid rgba(251, 191, 36, .34);
+  border-radius: 12px; padding: 5px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .55);
+  max-height: 190px; overflow-y: auto;
+  display: grid; gap: 3px;
+}
+.swap-picker-list.hidden { display: none; }
+.swap-picker-row {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: 0; border-radius: 9px;
+  padding: 8px 9px; cursor: pointer; text-align: left;
+  font-family: inherit; color: #e8eaf2;
+}
+.swap-picker-row:hover { background: rgba(255, 255, 255, .07); }
+.swap-picker-row.on { background: rgba(251, 191, 36, .15); }
+.swap-picker-name { font-size: 12.5px; font-weight: 700; flex: 1 1 auto; min-width: 0; }
+.swap-picker-code {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 10.5px; font-weight: 700; color: #fbbf24; flex: 0 0 auto;
+}
 /* ---------------- Swap desk ---------------- */
 /* Swap lives here on its own, not as a button on every account card, so the
    one action that needs a decision is separated from the one that does not. */
@@ -15,14 +60,6 @@
 }
 .swap-desk-copy { font-size: 12px; line-height: 1.5; color: #a8b0c4; margin: 0 0 11px; }
 .swap-desk-controls { display: flex; gap: 8px; align-items: stretch; }
-.swap-desk-controls select {
-  flex: 1 1 auto; min-width: 0;
-  font-size: 12.5px; font-weight: 600;
-  padding: 9px 10px; border-radius: 11px;
-  background: rgba(0, 0, 0, .3); color: #e8eaf2;
-  border: 1px solid var(--k-line, rgba(148, 163, 184, .2));
-  font-family: inherit;
-}
 .swap-desk-controls button { flex: 0 0 auto; white-space: nowrap; }
 .swap-desk-controls button:disabled { opacity: .5; }
 .swap-desk-note { font-size: 11.5px; color: #94a3b8; margin: 9px 0 0; line-height: 1.45; }
