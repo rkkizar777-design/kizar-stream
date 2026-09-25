@@ -2266,14 +2266,26 @@ async function checkLoyaltyReward() {
   const btn = $('btn-loyalty-check');
   const p = await getProfile();
   if (!p.username) { toast('Save your name first', 2500); return; }
+  // The claim mints a real activation key, so the server authorises it with
+  // the user's own key rather than the operator's panel password.
+  const key = (p.activations && (p.activations.access || '')) || '';
+  if (!key) { toast('Activate with a key first', 2800); return; }
   if (btn) btn.disabled = true;
   try {
     const res = await fetch(CONTROL_ROOM + '/api/loyalty', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: p.username })
+      headers: { 'Content-Type': 'application/json', 'x-kizar-key': key },
+      body: JSON.stringify({ username: p.username, key })
     });
-    if (!res.ok) { toast('Could not reach the server', 3000); return; }
+    if (!res.ok) {
+      let msg = 'Could not reach the server';
+      try {
+        const j = await res.json();
+        if (j && j.error) msg = j.error;
+      } catch (e) {}
+      toast(msg, 3000);
+      return;
+    }
     const data = await res.json();
     loyaltyState = data.loyalty || loyaltyState;
     renderLoyalty();
