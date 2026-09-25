@@ -1729,21 +1729,26 @@ body.onboarding .bottom-bar {
 .acc-card.is-prime .acc-dot { background: var(--accent-prime); }
 .acc-card:hover .acc-dot { transform: scale(1.2); }
 
-/* the only flexible track */
+/* the only flexible track: two lines, so the name never shares width with
+   anything and can never be clipped by its neighbour */
 .acc-main {
   min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  overflow: hidden;
+  display: grid;
+  gap: 1px;
+  align-content: center;
 }
 .acc-name {
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: -.005em;
+  letter-spacing: 0;
   color: var(--text-main);
   white-space: nowrap;
-  flex: 0 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  /* no ligatures: some faces merge "nt" into something that reads as "r" */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
 }
 .acc-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
