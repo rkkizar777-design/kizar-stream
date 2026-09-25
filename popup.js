@@ -725,54 +725,63 @@ async function writeCodesToGithub() {
 async function activateCode(raw) {
   const code = normalizeCode(raw);
   if (!code) return { ok: false, reason: 'empty' };
-  const tok = await getOwnerToken();
-  if (!tok) return { ok: false, reason: 'key' };
   const profile = await getProfile();
+  if (!profile.username) return { ok: false, reason: 'noname' };
+
+  // The server binds the key. The browser used to do it by writing
+  // activation.json with an embedded repo token, and GitHub kept refusing
+  // that write, so keys were never really bound to anybody. Everything
+  // downstream that checks a key therefore had nothing to match.
+  const p2 = await getProfile();
   for (let attempt = 0; attempt < 3; attempt++) {
-    const codes = await fetchCodes(true);
-    if (!codes) {
-      const reason = lastCodesError === 'ratelimit' ? 'ratelimit'
-        : lastCodesError === 'auth' ? 'auth'
-        : lastCodesError === 'notfound' ? 'notfound'
-        : 'offline';
-      return { ok: false, reason, detail: lastCodesError };
-    }
-    let target = null;
-    let feature = null;
-    outer:
-    for (const f of Object.keys(codes)) {
-      for (const c of codes[f] || []) {
-        if (c.code === code) { target = c; feature = f; break outer; }
-      }
-    }
-    if (!target) return { ok: false, reason: 'invalid' };
-    if (isExpired(target)) return { ok: false, reason: 'expired' };
-    if (target.used && !target.permanent) return { ok: false, reason: 'used' };
-    const permanent = !!target.permanent;
-    const tier = tierOfEntry(target);
-    if (!permanent) {
-      target.used = true;
-      target.usedBy = profile.username || 'unknown';
-      target.usedAt = new Date().toISOString();
-      if (!target.tier) target.tier = tier;
-    }
-    const expiresAt = target.expiresAt || target.expires || target.expiry || '';
+    if (attempt) await sleep(700 * attempt);
     try {
-      if (permanent) {
+      const res = await fetch(CONTROL_ROOM + '/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'redeem',
+          code,
+          username: profile.username,
+          ip: (await getProfile()).ip || (p2.ip || '')
+        })
+      });
+      const j = await res.json().catch(() => ({}));
+
+      if (res.ok && j && j.ok) {
+        const tier = j.tier || 'PRO';
+        const activations = Object.assign({}, profile.activations || {});
+        activations.access = code;
+        await setProfile(profile.username, activations, profile.memberSince, tier);
         STATE.codesReady = false;
-      } else {
-        await writeCodesToGithub();
-        STATE.codesReady = false;
+        return {
+          ok: true,
+          tier,
+          plan: j.plan || (tier === 'FREE' ? 'free' : 'active'),
+          expiresAt: j.expiresAt || ''
+        };
       }
-      const activations = Object.assign({}, profile.activations, { [feature]: code });
-      await setProfile(profile.username, activations, profile.memberSince, tier);
-      return { ok: true, feature, code, plan: derivePlan(activations, tier), permanent, expiresAt, tier };
+
+      const reason = String((j && j.error) || ('HTTP ' + res.status));
+      if (res.status >= 500 && attempt < 2) continue;   // the server will retry its own write
+      return { ok: false, reason: mapRedeemError(reason) };
     } catch (e) {
-      if (String(e.message || '').indexOf('409') < 0) return { ok: false, reason: 'write_failed' };
-      STATE.codesReady = false;
+      await sleep(800);
+      if (attempt === 2) return { ok: false, reason: 'offline', detail: String((e && e.message) || e) };
     }
   }
-  return { ok: false, reason: 'write_failed' };
+  return { ok: false, reason: 'offline' };
+}
+
+/** Turns the server's wording into the short reason the popup already uses. */
+function mapRedeemError(reason) {
+  const r = String(reason || '').toLowerCase();
+  if (r.indexOf('expired') >= 0) return 'expired';
+  if (r.indexOf('used') >= 0) return 'used';
+  if (r.indexOf('invalid') >= 0) return 'invalid';
+  if (r.indexOf('429') >= 0 || r.indexOf('rate') >= 0) return 'ratelimit';
+  if (r.indexOf('name') >= 0) return 'noname';
+  return 'write_failed';
 }
 
 async function validateStoredCode() {
@@ -1049,78 +1058,62 @@ async function reportDeadAccount(key, fingerprint) {
 
 async function requestSwap(key, fingerprint, reason) {
   const p = await getProfile();
-  if (!p.username) { toast('Save your name first', 3000); return; }
-  if (!fingerprint) return;
-  let tk = null;
-  try { tk = await getOwnerToken(); } catch (e) { return; }
-  if (!tk) { toast('Not connected', 3000); return; }
-
+  if (!p.username) { toast('Save your name first', 3000); return { ok: false, reason: 'Save your name first' }; }
+  if (!fingerprint) return { ok: false, reason: 'Nothing to swap' };
   const platformName = key === 'netflix' ? 'Netflix' : 'Prime';
 
-  // Read-modify-write against a file the Control Room is also polling. A single
-  // attempt loses the sha race whenever the operator has the panel open, which
-  // showed up as "Could not send the request" every time. Re-read and retry.
+  // The swap goes through the Control Room, not straight to GitHub.
+  //
+  // The browser was writing to requests.json itself, which meant every swap
+  // depended on a repo token shipping inside the extension and on GitHub
+  // accepting an update without a matching sha - it frequently did not, and the
+  // user just saw "could not send". The server owns the credential, retries the
+  // write properly, and the extension only proves who it is with the key the
+  // user already signed in with.
+  const accessKey = (p.activations && p.activations.access) || '';
+  if (!accessKey) {
+    const why = 'Activate a key before requesting a swap';
+    toast(why, 3400);
+    return { ok: false, reason: why };
+  }
+
   let lastErr = '';
-  for (let attempt = 0; attempt < 5; attempt++) {
-    if (attempt) await sleep(500 * attempt);
-    let data = {};
-    let sha = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt) await sleep(700 * attempt);
     try {
-      const meta = await githubJson(GITHUB_CONFIG.requests);
-      if (meta && meta.content) {
-        try { data = JSON.parse(b64utf8(meta.content)); } catch (e2) { data = {}; }
-        sha = meta.sha;
+      const res = await fetch(CONTROL_ROOM + '/api/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-kizar-key': accessKey },
+        body: JSON.stringify({
+          action: 'request',
+          username: p.username,
+          platform: key,
+          fingerprint,
+          reason: String(reason || '').slice(0, 200),
+          ip: p.ip || ''
+        })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j && j.ok) {
+        toast(platformName + ' swap request sent. Waiting for operator approval...', 3200);
+        return { ok: true, id: (j.request || {}).id };
       }
+      lastErr = (j && j.error) || ('HTTP ' + res.status);
+      if (res.status === 429) { await sleep(2200); continue; }
+      if (res.status >= 500) continue; // the server will retry its own write
+      break; // 400/401/403 are answers, not hiccups
     } catch (e) {
       lastErr = String((e && e.message) || e);
-      if (/ratelimit/i.test(lastErr)) { await sleep(1500); continue; }
-      continue;
-    }
-
-    if (!Array.isArray(data.requests)) data.requests = [];
-    const mine = data.requests.findIndex(
-      (r) => r && r.username === p.username && r.platform === key && (r.status === 'pending' || r.status === 'approved')
-    );
-    const req = mine >= 0 ? data.requests[mine] : {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      username: p.username,
-      platform: key,
-      at: new Date().toISOString()
-    };
-    req.savedFp = fingerprint;
-    req.savedShort = String(fingerprint).slice(0, 4).toUpperCase();
-    req.reason = String(reason || '').slice(0, 200);
-    req.ip = p.ip || '';
-    req.status = 'pending';
-    req.repliedAt = '';
-    req.requestedAt = new Date().toISOString();
-    if (mine < 0) data.requests.unshift(req);
-
-    try {
-      await putGithubJson(GITHUB_CONFIG.requests, JSON.stringify(data, null, 2), sha);
-      toast(platformName + ' swap request sent. Waiting for operator approval...', 3200);
-      return { ok: true };
-    } catch (e) {
-      lastErr = String((e && e.message) || e);
-      // 409 means somebody else wrote first: re-read and try again.
-      // 422 "sha wasn't supplied" means the read gave us nothing to write
-      // against, and a plain re-read fixes that too.
-      if (lastErr.indexOf('409') >= 0) continue;
-      if (/422/.test(lastErr) && /sha/i.test(lastErr)) continue;
-      if (/ratelimit/i.test(lastErr)) { await sleep(2000); continue; }
-      break;
+      await sleep(900);
     }
   }
+
   console.warn('swap request failed:', lastErr);
-  // Say what actually went wrong. "Could not send" on its own tells nobody
-  // whether it was a rate limit, a dead key or a lost race.
-  const why = /ratelimit/i.test(lastErr)
-    ? 'GitHub is rate limiting writes. Wait a minute and press again.'
-    : /401|Bad credentials/i.test(lastErr)
-      ? 'The extension cannot sign in to the data store any more. Tell the operator.'
-      : /409/i.test(lastErr)
-        ? 'The request list was being written at the same time. Press again.'
-        : 'Could not send the request (' + (lastErr || 'unknown error').slice(0, 110) + ')';
+  const why = /rate|too many/i.test(lastErr)
+    ? 'Too many requests in a row. Wait a moment and press again.'
+    : /key/i.test(lastErr)
+      ? 'Your key was not accepted (' + lastErr.slice(0, 60) + ').'
+      : 'Could not send the request (' + String(lastErr).slice(0, 90) + ')';
   toast(why, 4200);
   return { ok: false, reason: why, detail: lastErr };
 }
@@ -1634,10 +1627,8 @@ async function renderHomeSpace() {
 
   let card = null;
   try {
-    const raw = await fetchFromGithub(GITHUB_CONFIG.cards);
-    const data = JSON.parse(raw || '{}') || {};
-    const cards = data.cards || {};
-    card = cards[p.username] || null;
+    const inbox = await fetchOperatorInbox();
+    card = inbox.card || null;
   } catch (e) { card = null; }
 
   const img = $('home-space-img');
@@ -2096,14 +2087,68 @@ async function renderWaitingKeys() {
  * talks to, and both are filtered to this username plus broadcasts, so a
  * personal message never shows up on somebody else's screen.
  */
+/**
+ * The operator's space and messages, fetched from the Control Room.
+ *
+ * This used to read user-cards.json and messages.json straight off GitHub,
+ * which meant the browser needed a working repo token for something as passive
+ * as showing a note. The server already holds that credential and is already
+ * reachable, so it does the reading. Falls back to the direct file read if the
+ * server is unreachable, so a Control Room outage does not blank the Home.
+ */
+async function fetchOperatorInbox() {
+  const p = await getProfile();
+  if (!p.username) return { card: null, messages: [] };
+
+  const accessKey = (p.activations && p.activations.access) || '';
+  if (accessKey) {
+    try {
+      const res = await fetch(CONTROL_ROOM + '/api/ops?action=inbox', {
+        headers: { 'x-kizar-key': accessKey }
+      });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && j.ok) return { card: j.card || null, messages: j.messages || [], via: 'server' };
+      }
+    } catch (e) { /* fall through to the file read */ }
+  }
+
+  // fallback: read the two files directly
+  let card = null;
+  try {
+    const raw = await fetchFromGithub(GITHUB_CONFIG.cards);
+    const data = JSON.parse(raw || '{}') || {};
+    const cards = data.cards || {};
+    const me = p.username.toLowerCase();
+    const key = Object.keys(cards).find((u) => u.toLowerCase() === me);
+    card = key ? cards[key] : null;
+  } catch (e) { card = null; }
+
+  let messages = [];
+  try {
+    const raw = await fetchFromGithub(GITHUB_CONFIG.messages);
+    const data = JSON.parse(raw || '{}') || {};
+    const me = p.username.toLowerCase();
+    messages = (Array.isArray(data.messages) ? data.messages : [])
+      .filter((m) => m && (m.username === '*' || String(m.username || '').toLowerCase() === me));
+  } catch (e) { messages = []; }
+
+  return { card, messages, via: 'file' };
+}
+
 async function getInbox() {
   const p = await getProfile();
   if (!p.username) return { notes: [], unread: 0 };
-  const me = p.username;
+  const me = p.username.toLowerCase();
+
+  let inbox = { card: null, messages: [] };
+  try { inbox = await fetchOperatorInbox(); } catch (e) { inbox = { card: null, messages: [] }; }
+
   const notes = [];
 
-  // 1. key gifts
-  const gifts = await getWaitingKeys().catch(() => []);
+  // key gifts
+  let gifts = [];
+  try { gifts = await getWaitingKeys(); } catch (e) { gifts = []; }
   for (const c of gifts) {
     const tier = tierOfEntry(c) || 'PRO';
     notes.push({
@@ -2117,16 +2162,7 @@ async function getInbox() {
     });
   }
 
-  // 2. messages
-  let msgs = [];
-  try {
-    const raw = await fetchFromGithub(GITHUB_CONFIG.messages);
-    const data = JSON.parse(raw || '{}') || {};
-    const list = Array.isArray(data.messages) ? data.messages : [];
-    msgs = list.filter((m) => m && (m.username === '*' || m.username === me));
-  } catch (e) { msgs = []; }
-
-  for (const m of msgs) {
+  for (const m of inbox.messages || []) {
     notes.push({
       id: 'msg:' + m.id,
       kind: m.kind === 'alert' ? 'alert' : (m.kind === 'reward' ? 'gift' : 'notice'),
@@ -2139,10 +2175,10 @@ async function getInbox() {
 
   notes.sort((a, b) => b.ts - a.ts);
 
-  // 3. unread count against the last time the list was opened
   const store = await chrome.storage.local.get(NOTIFY_SEEN_KEY).catch(() => ({}));
   const seenAt = Number(store[NOTIFY_SEEN_KEY]) || 0;
   const unread = notes.filter((n) => n.ts > seenAt).length;
+  void me;
   return { notes, unread, seenAt };
 }
 
@@ -3120,7 +3156,7 @@ $('btn-unban').addEventListener('click', async function () {
     btn._armed = true;
     btn.textContent = 'Tap again to confirm';
     btn.classList.add('danger-arm');
-    toast('Your PRO membership key becomes unusable - this cannot be undone', 3000);
+    toast('Your account is deleted and your key is released - this cannot be undone', 3600);
     setTimeout(() => {
       btn._armed = false;
       btn.textContent = 'Reset app';
@@ -3131,6 +3167,23 @@ $('btn-unban').addEventListener('click', async function () {
   btn._armed = false;
   btn.textContent = 'Reset app';
   btn.classList.remove('danger-arm');
+
+  // Delete the account on the server first, while the key is still in hand.
+  // Otherwise the row stays in the Control Room and the username is never free.
+  const p = await getProfile();
+  const accessKey = (p.activations && p.activations.access) || '';
+  let released = false;
+  if (accessKey && p.username) {
+    try {
+      const res = await fetch(CONTROL_ROOM + '/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-kizar-key': accessKey },
+        body: JSON.stringify({ action: 'release', username: p.username, key: accessKey })
+      });
+      released = res.ok;
+    } catch (e) { released = false; }
+  }
+
   await clearBanned();
   await clearSavedSessions();
   await chrome.storage.local.remove(PROFILE_KEY);
@@ -3139,9 +3192,12 @@ $('btn-unban').addEventListener('click', async function () {
   STATE.codesReady = false;
   STATE.sessions = { netflix: [], prime: [] };
   STATE.streaming = false;
-  toast('Reset complete - welcome back!');
+  toast(released
+    ? 'Account deleted - your name is free again'
+    : 'Reset done - the server could not be reached, ask the operator to remove it', 4000);
   await refresh();
   showView('welcome');
+  document.body.classList.add('onboarding');
   try { $('wel-username').focus(); } catch (e) {}
 });
 $('btn-stream-netflix').addEventListener('click', () => tryStream('netflix'));
