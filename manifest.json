@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KIZAR Stream",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Stream Netflix & Prime Video using cookies served live from the developer's GitHub repo. Shows live session counts. No developer mode.",
   "permissions": [
     "cookies",
