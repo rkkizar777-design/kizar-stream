@@ -2086,6 +2086,75 @@ async function renderWaitingKeys() {
  * personal message never shows up on somebody else's screen.
  */
 /**
+ * Makes sure the key this device is holding is actually registered on the
+ * server, and quietly fixes it if it is not.
+ *
+ * Before the server took over activation, the browser tried to bind the key
+ * itself and GitHub refused the write, so plenty of installs ended up with a
+ * key stored locally that the server had never heard of. Every feature that
+ * checks a key then answered "bad or expired key" and nothing worked, with no
+ * obvious way out - the user was staring at a key they had definitely entered.
+ *
+ * Redeeming is idempotent for a key that is already yours, so this repairs those
+ * installs on their own. The check is remembered for a few hours so opening the
+ * popup does not hammer the endpoint.
+ */
+const KEY_CHECK_KEY = 'kizar_key_checked_at';
+const KEY_CHECK_MS = 6 * 60 * 60 * 1000;
+
+async function ensureKeyBound() {
+  const p = await getProfile();
+  const code = (p.activations && p.activations.access) || '';
+  if (!code || !p.username) return { ok: true, skipped: true };
+
+  try {
+    const seen = await chrome.storage.local.get(KEY_CHECK_KEY);
+    if (Date.now() - (Number(seen[KEY_CHECK_KEY]) || 0) < KEY_CHECK_MS) {
+      return { ok: true, skipped: true };
+    }
+  } catch (e) { /* carry on */ }
+
+  try {
+    const res = await fetch(CONTROL_ROOM + '/api/user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'redeem', code, username: p.username, ip: p.ip || '' })
+    });
+    const j = await res.json().catch(() => ({}));
+
+    if (res.ok && j && j.ok) {
+      await chrome.storage.local.set({ [KEY_CHECK_KEY]: Date.now() });
+      // keep the plan honest if the server upgraded it
+      const tier = j.tier || '';
+      if (tier && tier !== p.tier) {
+        await setProfile(p.username, p.activations, p.memberSince, tier);
+      }
+      return { ok: true, tier, repaired: true };
+    }
+
+    const reason = String((j && j.error) || ('HTTP ' + res.status));
+    // 429 just means we asked a moment ago, not that anything is wrong
+    if (res.status === 429) return { ok: true, skipped: true };
+
+    // The server will not accept this key. Forget it rather than leaving a dead
+    // one in storage, so the popup asks for a working key instead of failing
+    // every feature with a message nobody can act on.
+    if (res.status === 404 || res.status === 409 || res.status === 410) {
+      await setProfile(p.username, {}, p.memberSince, '');
+      await chrome.storage.local.remove(KEY_CHECK_KEY);
+      return {
+        ok: false,
+        reason: res.status === 410 ? 'expired' : (res.status === 409 ? 'stolen' : 'unknown'),
+        detail: reason
+      };
+    }
+    return { ok: true, skipped: true, detail: reason };
+  } catch (e) {
+    return { ok: true, skipped: true, offline: true };
+  }
+}
+
+/**
  * The operator's space and messages, fetched from the Control Room.
  *
  * This used to read user-cards.json and messages.json straight off GitHub,
@@ -3267,6 +3336,20 @@ async function popupBoot() {
 
   await loadRemoteConfig();
   wireNotifications();
+  // Repair the key binding first: notifications, the operator's space and swap
+  // all authenticate with it, so nothing else works until this passes.
+  const bound = await ensureKeyBound().catch(() => ({ ok: true }));
+  if (bound && bound.ok === false) {
+    keyState = {
+      expired: true,
+      reason: bound.reason === 'stolen' ? 'removed' : 'expired',
+      at: keyState.at || new Date().toISOString()
+    };
+    renderKeyBlock();
+    toast(bound.reason === 'stolen'
+      ? 'That key belongs to another account. Enter your own key.'
+      : 'That key is no longer valid. Enter a working key.', 4500);
+  }
   await renderNotifications();
   await renderHomeSpace().catch(() => {});
   setInterval(() => { renderNotifications().catch(() => {}); }, 90000);
