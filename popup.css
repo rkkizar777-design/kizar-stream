@@ -41,24 +41,6 @@
 }
 .swap-open[aria-expanded="true"] .swap-open-chev { transform: rotate(-135deg) translateY(-1px); }
 .swap-desk[hidden] { display: none; }
-/* ---------------- Operator space at the bottom of Home ---------------- */
-/* Deliberately unlabelled: the words come from the Control Room, not here. */
-.home-space { margin: 0 0 12px; display: grid; gap: 9px; }
-.home-space[hidden] { display: none; }
-.home-space-img {
-  width: 100%; border-radius: 14px; display: block;
-  border: 1px solid var(--k-line, rgba(148, 163, 184, .16));
-  max-height: 260px; object-fit: cover;
-}
-.home-space-img[hidden] { display: none; }
-.home-space-text {
-  font-size: 12.5px; line-height: 1.55; color: #c3cad9;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--k-line, rgba(148, 163, 184, .16));
-  border-radius: 12px; padding: 10px 12px;
-  white-space: pre-wrap; overflow-wrap: anywhere;
-}
-.home-space-text[hidden] { display: none; }
 /* ---------------- Swap picker (hand built, not a native select) ---------------- */
 .swap-picker { position: relative; flex: 1 1 auto; min-width: 0; }
 .swap-picker-btn {
@@ -139,69 +121,6 @@
 .key-expired-box.hidden { display: none; }
 .key-expired-box span { flex: 1 1 180px; min-width: 0; }
 .key-expired-box button { flex: 0 0 auto; }
-/* ---------------- Home notifications: a plain bell ---------------- */
-.notify-bar {
-  position: relative; display: flex; justify-content: flex-end;
-  margin: 0 0 10px;
-}
-.notify-trigger {
-  position: relative;
-  width: 34px; height: 34px; flex: 0 0 auto;
-  display: grid; place-items: center;
-  background: transparent;
-  border: 1px solid rgba(148, 163, 184, .2);
-  border-radius: 10px;
-  cursor: pointer; padding: 0;
-  color: #8b93a8;
-  transition: color .15s ease, border-color .15s ease, background .15s ease;
-}
-.notify-trigger:hover {
-  color: #e8eaf2;
-  border-color: rgba(148, 163, 184, .38);
-  background: rgba(255, 255, 255, .04);
-}
-.notify-trigger[aria-expanded="true"] {
-  color: #e8eaf2;
-  border-color: rgba(56, 189, 248, .5);
-  background: rgba(56, 189, 248, .1);
-}
-.notify-bell { width: 18px; height: 18px; fill: currentColor; display: block; }
-.notify-count {
-  position: absolute; top: -5px; right: -5px;
-  min-width: 17px; height: 17px; padding: 0 4px;
-  display: grid; place-items: center;
-  background: #e11d48; color: #fff;
-  border: 2px solid #0a0c12;
-  border-radius: 999px;
-  font-size: 10px; font-weight: 800; line-height: 1;
-}
-.notify-count.hidden { display: none; }
-.notify-list {
-  position: absolute; top: calc(100% + 6px); right: 0; left: 0; z-index: 45;
-  display: grid; gap: 6px;
-}
-.notify-list.hidden { display: none; }
-.notify-empty { font-size: 12px; color: #94a3b8; margin: 0; padding: 10px 11px;
-  background: rgba(255, 255, 255, .04); border: 1px solid var(--k-line, rgba(148, 163, 184, .16));
-  border-radius: 12px; text-align: center; }
-.notify-row {
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--k-line, rgba(148, 163, 184, .18));
-  border-radius: 12px; padding: 10px 11px;
-  display: grid; gap: 4px;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .4);
-}
-.notify-row.gift { border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .07); }
-.notify-row.alert { border-color: rgba(248, 113, 113, .32); background: rgba(248, 113, 113, .07); }
-.notify-head { display: flex; align-items: baseline; gap: 8px; }
-.notify-title { font-size: 12px; font-weight: 700; color: #e8eaf2; }
-.notify-when { font-size: 10.5px; color: #94a3b8; margin-left: auto; white-space: nowrap; }
-.notify-body { font-size: 12.5px; color: #cbd5e1; line-height: 1.45; overflow-wrap: anywhere; }
-.notify-row button { justify-self: start; margin-top: 3px; }
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-}
 /* ---------------- Keys sent by the operator ---------------- */
 .waiting-keys {
   margin: 0 0 12px; padding: 12px;
@@ -306,36 +225,96 @@ body.popup-body {
   border-bottom: 1px solid var(--border-card);
 }
 
+/* The lockup.
+   The mark carries the gradient and the glass itself, so this box only has to
+   size it and give it depth. Previously it was a flat div with a letter in it,
+   which is why it read as a placeholder rather than a logo. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  min-width: 0;
 }
 
+/* Square, to match the square mark.
+   This box was 34x32, sized for the old streaming-trail mark which was wider
+   than it was tall. The official mark is a ring, so it was being squeezed into a
+   box that shape does not fit - the K came out as a tall narrow oval. Sized to
+   the mark, it cannot distort whatever the browser does with preserveAspectRatio. */
 .brand-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-cyan) 100%);
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 14px;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.35);
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  position: relative;
+  /* No plate and no ring: the mark is the bars and the play, so anything behind
+     it would only box it in and make it look like a badge instead of a mark. */
+  background: transparent;
+}
+/* Depth without a container: two drop-shadows on the SVG itself give a tight
+   contact shadow and a wide coloured bloom, which a flat div could not do
+   around a shape this irregular. */
+.brand-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter:
+    drop-shadow(0 1px 1px rgba(2, 6, 23, .6))
+    drop-shadow(0 3px 12px rgba(34, 211, 238, .45));
+}
+/* A slow specular sweep across the whole mark. Long and mostly still, so it is
+   felt rather than watched - and it disappears entirely under reduced-motion. */
+/* The sheen follows the mark's shape. It was a rounded RECTANGLE, sized for the
+   old wide bars; over a ring that reads as a panel laid across a circle. */
+.brand-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(118deg, transparent 42%, rgba(255, 255, 255, .22) 50%, transparent 58%);
+  background-size: 280% 100%;
+  animation: brandSheen 7.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes brandSheen {
+  0%, 64% { background-position: 190% 0; }
+  100%    { background-position: -90% 0; }
 }
 
+/* The wordmark. Two weights and a hairline gap, so the two halves are distinct
+   words rather than one run-on. Tight negative tracking keeps it from looking
+   loose next to a compact mark. */
 .brand-name {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  min-width: 0;
   font-size: 15px;
-  font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.3px;
-}
-
-.brand-name span {
-  color: var(--accent-cyan);
   font-weight: 800;
-  margin-left: 2px;
+  letter-spacing: -.4px;
+  line-height: 1;
+  /* The name yields before the status pill does. It used to keep its natural
+     width, so a long plan name pushed the whole bar past the 360px popup and the
+     right-hand controls were the ones cut off. */
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 0 1 auto;
+}
+.brand-name-1, .brand-name-2 { overflow: hidden; text-overflow: ellipsis; }
+.brand-name-1 {
+  color: var(--text-main);
+}
+.brand-name-2 {
+  background: linear-gradient(96deg, var(--accent-primary), var(--accent-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* If background-clip:text is unavailable the second word would be invisible,
+   because its colour is transparent. Fall back to a solid accent. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .brand-name-2 { color: var(--accent-cyan); }
 }
 
 .header-right {
@@ -438,13 +417,13 @@ body.popup-body {
 .stream-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .stream-card {
   position: relative;
-  padding: 15px 16px;
-  border-radius: 18px;
+  padding: 12px 13px;
+  border-radius: 15px;
   border: 1px solid var(--border-card);
   background: rgba(255, 255, 255, 0.025);
   box-shadow:
@@ -453,7 +432,7 @@ body.popup-body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
   transition: transform 0.22s var(--spring), border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
@@ -463,6 +442,10 @@ body.popup-body {
 
 .stream-card.prime {
   background: linear-gradient(150deg, rgba(0, 180, 216, 0.08) 0%, rgba(255, 255, 255, 0.015) 45%, transparent 100%);
+}
+
+.stream-card.crunchyroll {
+  background: linear-gradient(150deg, rgba(244, 117, 33, 0.08) 0%, rgba(255, 255, 255, 0.015) 45%, transparent 100%);
 }
 
 .stream-card:hover {
@@ -489,7 +472,7 @@ body.popup-body {
 }
 
 .platform-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text-main);
   letter-spacing: -0.2px;
@@ -497,8 +480,16 @@ body.popup-body {
 
 .stream-card.netflix .platform-title { color: #ffa5af; }
 .stream-card.prime .platform-title { color: #7ee2ff; }
+.stream-card.crunchyroll .platform-title { color: #f8a35f; }
 
 /* Card Body: Small Counter Display */
+/* Closed. The session counts are business information, so the cluster inside
+   them was already hidden - but the body shell itself kept rendering empty,
+   and as a flex child it earned a second gap: the space between the platform
+   name and the button was double what was designed, which is a big part of
+   why every card felt oversized. */
+.stream-card .card-body { display: none; }
+
 .card-body {
   position: relative;
   z-index: 2;
@@ -529,6 +520,11 @@ body.popup-body {
   text-shadow: 0 1px 10px rgba(0, 180, 216, 0.3);
 }
 
+.stream-card.crunchyroll .count-big {
+  color: #f8a35f;
+  text-shadow: 0 1px 10px rgba(244, 117, 33, 0.3);
+}
+
 .count-caption {
   font-size: 10px;
   font-weight: 600;
@@ -541,20 +537,20 @@ body.popup-body {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 38px;
+  height: 34px;
   padding: 0 14px;
-  border-radius: 12px;
+  border-radius: 11px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   color: #fff;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   transition: all 0.2s var(--spring);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   z-index: 2;
@@ -591,8 +587,23 @@ body.popup-body {
 .p-btn:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(0, 180, 216, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.c-btn {
+  background: linear-gradient(135deg, #f47521 0%, #d85f10 55%, #a84808 100%);
+  box-shadow:
+    0 6px 18px rgba(244, 117, 33, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.c-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 24px rgba(244, 117, 33, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
@@ -636,7 +647,7 @@ body.popup-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 14px;
+  margin-top: 10px;
   padding: 0 4px;
 }
 
@@ -672,25 +683,40 @@ body.popup-body {
   margin-bottom: 12px;
 }
 
+/* The Saved heading costs one line, not two: the subtitle sits beside the
+   name as its caption, both small, and the cards start right beneath it. */
 .section-header {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  margin-bottom: 7px;
 }
 
 .section-title {
-  font-size: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  white-space: nowrap;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.3px;
   color: var(--text-main);
 }
 
 .section-sub {
-  font-size: 11px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
   color: var(--text-muted);
 }
 
 /* ---------------- Sessions View ---------------- */
 .session-card {
-  padding: 14px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
 }
 
 /* The section header drops the boxed tag: a coloured dot and a quiet name say
@@ -702,44 +728,52 @@ body.popup-body {
   gap: 8px;
   min-width: 0;
   margin-bottom: 9px;
-  padding-bottom: 9px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-card);
 }
 .session-header .mini-tag { min-width: 0; overflow: hidden; }
 .session-count {
   flex: 0 0 auto;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: .01em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
   color: var(--text-faint);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
 }
 .session-count:empty { display: none; }
 .mini-tag {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   letter-spacing: -.003em;
   text-transform: none;
-  color: var(--text-muted);
+  color: var(--text-main);
   padding: 0;
   background: none;
   border-radius: 0;
 }
 .mini-tag::before {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex: 0 0 auto;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .05);
 }
-.mini-tag.n { background: none; color: var(--text-muted); }
-.mini-tag.n::before { background: var(--accent-netflix); }
-.mini-tag.p { background: none; color: var(--text-muted); }
-.mini-tag.p::before { background: var(--accent-prime); }
+.mini-tag.n { background: none; color: var(--text-main); }
+.mini-tag.n::before { background: var(--accent-netflix); box-shadow: 0 0 0 3px rgba(255, 51, 75, .14); }
+.mini-tag.p { background: none; color: var(--text-main); }
+.mini-tag.p::before { background: var(--accent-prime); box-shadow: 0 0 0 3px rgba(0, 180, 216, .14); }
+.mini-tag.c { background: none; color: var(--text-main); }
+.mini-tag.c::before { background: #f47521; box-shadow: 0 0 0 3px rgba(244, 117, 33, .14); }
 
 .saved-row:empty { display: none; }
 
@@ -772,32 +806,82 @@ body.popup-body {
 /* ---------------- Profile View ---------------- */
 .profile-card {
   text-align: center;
-  padding: 24px 16px;
+  padding: 22px 16px 14px;
+  position: relative;
+  overflow: hidden;
 }
+/* A single aurora behind the avatar: light from above, so the identity card
+   reads as the head of the view instead of another box in a column of them. */
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  width: 190px;
+  height: 150px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(45, 212, 191, 0.16), rgba(56, 189, 248, 0.07) 55%, transparent 78%);
+  pointer-events: none;
+}
+.profile-card > * { position: relative; z-index: 1; }
 
 .avatar-wrap {
+  position: relative;
   display: flex;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+.avatar-ring {
+  width: 66px;
+  height: 66px;
+  background: #1f2735;
+  display: grid;
+  place-items: center;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 10px 24px -10px rgba(0, 0, 0, 0.6);
 }
 
 .cute-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-cyan) 100%);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
+  width: 56px;
+  height: 56px;
+  background: var(--avatar-color, #fde68a);
   display: grid;
   place-items: center;
-  box-shadow: 0 6px 18px rgba(129, 140, 248, 0.35);
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+.avatar-star {
+  position: absolute;
+  right: calc(50% - 29px);
+  top: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #3a2401;
+  font-size: 10px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  box-shadow: 0 0 0 3px rgba(11, 15, 20, 0.85);
 }
 
 .username {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
+  letter-spacing: -0.2px;
   color: var(--text-main);
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .name-line {
@@ -805,63 +889,68 @@ body.popup-body {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
-
-.mini-icon-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-faint);
-  cursor: pointer;
-  padding: 3px;
-  border-radius: 5px;
-  display: grid;
-  place-items: center;
-}
-
-.mini-icon-btn:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.mini-icon-btn svg { width: 13px; height: 13px; fill: currentColor; }
 
 .sub-line {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-faint);
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
-.plan-badge-row {
-  margin-top: 14px;
+.plan-chip {
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-.plan-label {
-  font-size: 10px;
+.plan-kicker {
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.4px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
 }
 
 .plan-pill {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 0.6px;
-  padding: 4px 11px;
+  letter-spacing: 0.8px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-cyan));
-  color: #070913;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.edit-box {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 8px;
+/* The gold one is jewellery: gradient metal, a warm shadow under it, and no
+   border to outline - the fill is the border. */
+.plan-pill.pro {
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  color: #3a2401;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
+}
+
+.plan-pill.free {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.plan-pill.none {
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.plan-desc {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 3px;
 }
 
 /* ---------------- Plan View ---------------- */
@@ -872,8 +961,9 @@ body.popup-body {
 }
 
 .plan-tier-name {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
+  letter-spacing: -0.3px;
   color: var(--text-main);
   display: block;
 }
@@ -886,23 +976,70 @@ body.popup-body {
 }
 
 .plan-desc-text {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-muted);
 }
 
 .member-flag {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
-  padding: 3px 8px;
+  letter-spacing: 0.6px;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
+  border: 1px solid transparent;
 }
 
 .member-card.active .member-flag {
-  background: rgba(52, 211, 153, 0.15);
-  color: #6ee7b7;
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
 }
+
+.m-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+.plat-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #cbd5e1;
+}
+
+.plat-chip::before {
+  content: '•';
+  margin-right: 5px;
+  font-size: 12px;
+  line-height: 0;
+}
+
+.plat-chip.netflix {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: rgba(229, 9, 20, 0.35);
+  color: #ff7a86;
+}
+.plat-chip.netflix::before { color: #e50914; }
+
+.plat-chip.prime {
+  background: rgba(56, 189, 248, 0.13);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+.plat-chip.prime::before { color: #38bdf8; }
+
+.plat-chip.crunchyroll {
+  background: rgba(244, 117, 33, 0.13);
+  border-color: rgba(244, 117, 33, 0.3);
+  color: #f8a35f;
+}
+.plat-chip.crunchyroll::before { color: #f47521; }
 
 .cute-benefits {
   list-style: none;
@@ -1009,65 +1146,139 @@ body.popup-body {
 }
 
 /* ---------------- Bottom Dock (Cute & Floating) ---------------- */
+/* The dock.
+   One sliding pill behind the active item rather than tinting the button where
+   it sits: the indicator becomes a single object that moves, instead of four
+   unrelated highlights that appear and vanish. --nav-i is written by showView(),
+   so the indicator and the aria-selected state can never disagree. */
 .bottom-bar {
+  --nav-i: 0;
+  --nav-n: 4;
   position: fixed;
   bottom: 8px;
   left: 14px;
   right: 14px;
-  height: 50px;
-  background: rgba(14, 17, 26, 0.92);
+  height: 52px;
+  background: rgba(13, 16, 24, 0.86);
   border: 1px solid var(--border-card);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-radius: 17px;
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 3px 5px;
+  padding: 4px;
   z-index: 40;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .04) inset,
+    0 12px 28px rgba(0, 0, 0, .45);
+}
+
+/* The slider. Width and offset are both derived from the item count, so it still
+   lines up if a tab is ever added or removed. */
+/* The slider. Width and offset both come from the item count.
+
+   The row has NO gap between buttons - they are flex: 1 1 0 filling the content
+   box. So the 8px here is the BAR'S OWN PADDING, and (100% - 8px) / n is exactly
+   one button. An earlier version of this "fixed" it to subtract (n-1) gaps,
+   which was wrong for this layout and pushed the highlight off the end.
+
+   Verified: content box = 332 - 8 = 324; 324 / 5 = 64.8 per button; the last
+   step is 4 x 64.8 = 259.2, plus 4px of left inset, which lands the pill inside
+   the bar. */
+.bottom-bar::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  /* Width: one button. The row has no gap, so the only 8px in play is the bar's
+     own padding, which is exactly what this subtracts.
+     Position: one button width per step - again, no gaps to account for. */
+  width: calc((100% - 8px) / var(--nav-n));
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(129, 140, 248, .22), rgba(129, 140, 248, .12));
+  border: 1px solid rgba(129, 140, 248, .22);
+  transform: translateX(calc(var(--nav-i) * 100%));
+  transition: transform .34s var(--spring);
+  pointer-events: none;
 }
 
 .nav-btn {
-  flex: 1;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
   height: 100%;
   background: transparent;
   border: none;
-  border-radius: 12px;
+  border-radius: 13px;
   color: var(--text-faint);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   cursor: pointer;
-  transition: all 0.18s var(--spring);
+  transition: color .2s var(--spring);
   font-family: inherit;
   font-size: 9.5px;
   font-weight: 700;
+  letter-spacing: .01em;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-btn svg {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
+  transition: transform .26s var(--spring);
 }
 
-.nav-btn:hover {
-  color: var(--text-muted);
-}
+.nav-btn:hover { color: var(--text-muted); }
+.nav-btn:hover svg { transform: translateY(-1px); }
 
+/* Active is carried by THREE things, not one colour: the slider behind it, the
+   icon tint, and a brighter label. Colour alone would leave the tab
+   indistinguishable for anyone who cannot separate cyan from grey. */
 .nav-btn.active {
-  color: #fff;
-  background: rgba(129, 140, 248, 0.15);
+  color: var(--text-main);
+  background: transparent;
 }
-
 .nav-btn.active svg {
   fill: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+.nav-btn.active span { opacity: 1; }
+.nav-btn span { opacity: .75; transition: opacity .2s var(--spring); }
+
+/* Keyboard only. Never on pointer focus, which would leave a ring sitting on the
+   item after a click. */
+.nav-btn:focus { outline: none; }
+.nav-btn:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: -2px;
+}
+/* Forced-colours / high-contrast users get a border, since the fill is invisible
+   there. */
+@media (forced-colors: active) {
+  .nav-btn.active { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .bottom-bar::before { display: none; }
 }
 
 body.onboarding .bottom-bar {
   display: none;
+}
+
+/* The Halloween pass tints the lockup too, so the season reaches the top of the
+   window instead of only the body behind it. */
+body.halloween .brand-mark {
+  filter:
+    drop-shadow(0 1px 2px rgba(2, 6, 23, .55))
+    drop-shadow(0 4px 14px rgba(251, 146, 60, .42));
+}
+body.halloween .brand-name-2 {
+  background: linear-gradient(96deg, #fbbf24, #fb923c);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* ---------------- Minimal Cute Toast ---------------- */
@@ -1112,6 +1323,15 @@ body.onboarding .bottom-bar {
 
 /* ---------------- Saved Accounts List & Re-enter Cards ---------------- */
 
+/* A settings row, not a notice: text left, the destructive action parked at
+   the right and quiet until the planned hover. */
+.reset-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+}
+
 .reset-info {
   display: flex;
   flex-direction: column;
@@ -1120,26 +1340,27 @@ body.onboarding .bottom-bar {
 }
 
 .reset-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--text-main);
 }
 
 .reset-caption {
-  font-size: 10.5px;
-  line-height: 1.35;
+  font-size: 10px;
+  line-height: 1.4;
   color: var(--text-faint);
 }
 
 .reset-btn {
-  padding: 8px 14px;
-  border-radius: 11px;
+  padding: 7px 12px;
+  border-radius: 10px;
   border: 1px solid rgba(229, 9, 20, 0.35);
-  background: rgba(229, 9, 20, 0.12);
+  background: rgba(229, 9, 20, 0.1);
   color: #ff8595;
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 0.3px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s var(--spring);
@@ -1325,16 +1546,24 @@ body.onboarding .bottom-bar {
 .vrow {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-top: 9px;
-  padding-top: 9px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
   min-width: 0;
 }
 
+.status-row {
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgba(34, 211, 238, 0.16);
+  border-radius: 10px;
+  background: rgba(34, 211, 238, 0.05);
+}
+
 .vdot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
   background: #94a3b8;
@@ -1351,8 +1580,8 @@ body.onboarding .bottom-bar {
 }
 
 .vrow-sub {
-  font-size: 9.5px;
-  color: #64748b;
+  font-size: 10px;
+  color: #8ea0b8;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1376,19 +1605,36 @@ body.onboarding .bottom-bar {
 .vrow-btn svg { width: 11px; height: 11px; fill: currentColor; }
 .vrow-btn:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.26); }
 
-.build-row { border-top: none; padding-top: 4px; margin-top: 4px; }
-.build-row .vrow-sub.mono {
+.build-row {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 6px;
+  padding: 4px 10px 0;
+}
+
+.build-fp {
+  flex: 1;
+  min-width: 0;
   font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 9px;
   letter-spacing: 0.2px;
-  color: #64748b;
+  color: #7c8ba5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
+  padding: 4px 8px;
 }
 
 /* ---------------- Loyalty card (Profile only) ---------------- */
 .loyalty-card {
   margin-top: 12px;
-  padding: 14px;
-  background: linear-gradient(150deg, rgba(56, 189, 248, 0.09), rgba(168, 85, 247, 0.07));
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 12px 13px 11px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .loyalty-head {
@@ -1399,15 +1645,22 @@ body.onboarding .bottom-bar {
 }
 
 .loyalty-badge {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  font-size: 19px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: badgeFloat 4.2s ease-in-out infinite;
+}
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .loyalty-titles { flex: 1; min-width: 0; }
@@ -1422,14 +1675,15 @@ body.onboarding .bottom-bar {
 }
 
 .loyalty-rank {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 8.5px;
+  font-weight: 800;
   color: var(--text-faint);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
 }
 
 .loyalty-xp {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--accent-cyan);
   flex-shrink: 0;
@@ -1437,11 +1691,11 @@ body.onboarding .bottom-bar {
 }
 
 .loyalty-bar {
-  height: 6px;
+  height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
-  margin: 12px 0 6px;
+  margin: 10px 0 6px;
 }
 
 .loyalty-fill {
@@ -1449,6 +1703,7 @@ body.onboarding .bottom-bar {
   border-radius: 999px;
   background: linear-gradient(90deg, #38bdf8, #a855f7);
   transition: width 0.4s var(--spring);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.35);
 }
 .loyalty-fill.t1 { background: linear-gradient(90deg, #b45309, #d97706); }
 .loyalty-fill.t2 { background: linear-gradient(90deg, #6b7280, #9ca3af); }
@@ -1456,7 +1711,7 @@ body.onboarding .bottom-bar {
 .loyalty-fill.t4 { background: linear-gradient(90deg, #22d3ee, #a855f7); }
 
 .loyalty-next {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-faint);
   font-weight: 600;
 }
@@ -1464,27 +1719,32 @@ body.onboarding .bottom-bar {
 .loyalty-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  margin: 12px 0 0;
+  gap: 0;
+  margin: 10px 0 0;
 }
 
+/* Borderless tiles with hairline dividers: numbers in columns read like an
+   engraved ledger - the boxed chips before this looked like little buttons
+   nobody could press. */
 .lstat {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  padding: 8px 4px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 5px 8px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   min-width: 0;
 }
+.lstat + .lstat { border-left: 1px solid rgba(255, 255, 255, 0.07); }
 
 .lstat-v {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text-main);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .lstat-k {
@@ -1499,34 +1759,6 @@ body.onboarding .bottom-bar {
   text-overflow: ellipsis;
   max-width: 100%;
 }
-
-.loyalty-reward {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 9px 11px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(148, 163, 184, 0.25);
-  min-width: 0;
-}
-.loyalty-reward.won {
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.4);
-}
-
-.loyalty-reward-text {
-  flex: 1;
-  min-width: 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.loyalty-reward.won .loyalty-reward-text { color: #6ee7b7; }
 
 .plan-strip {
   display: flex;
@@ -1564,12 +1796,6 @@ body.onboarding .bottom-bar {
 .welcome-card {
   padding: 26px 22px 22px;
   text-align: center;
-}
-
-.welcome-card .welcome-icon {
-  font-size: 34px;
-  line-height: 1;
-  margin-bottom: 12px;
 }
 
 .welcome-title {
@@ -1673,22 +1899,148 @@ body.onboarding .bottom-bar {
 
 .status-pill.err { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
 
-.update-box {
+
+/* The update centre.
+   A strict column, one element per line. It used to be a wrapping flex row,
+   which let the file path and the buttons fight for width and pushed "Show"
+   off the edge - the path won, because it was the flexible one. In a column
+   nothing can collide, and the only element allowed to exceed its text is the
+   path, which ellipsises instead of overflowing. */
+.upd {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 9px 11px;
+  margin: 0 0 10px;
+  border-radius: 11px;
+  background: rgba(56, 189, 248, 0.09);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-main);
+  max-width: 100%;
+  overflow: hidden;
+}
+.upd-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.upd.hidden { display: none; }
+
+.upd-txt { display: block; min-width: 0; max-width: 100%; }
+.upd-txt b { color: #7dd3fc; font-weight: 600; }
+.upd-txt i {
+  display: block;
+  font-style: normal;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.upd-txt i:empty { display: none; }
+
+.upd-b {
+  flex: 0 0 auto;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.16);
+  color: #bae6fd;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.upd-b:hover { background: rgba(56, 189, 248, 0.26); }
+.upd-b:disabled { opacity: 0.5; cursor: default; }
+.upd-ghost { background: none; border-color: var(--border-card-hover); color: var(--text-muted); }
+.upd-ghost:hover { background: rgba(255,255,255,0.06); }
+
+.upd-s { display: block; min-width: 0; color: var(--text-muted); font-size: 10.5px; overflow-wrap: anywhere; }
+.upd-s:empty { display: none; }
+
+/* Download progress. Driven by chrome.downloads.onChanged, so it reflects the
+   real transfer rather than a fake animation. */
+.upd-bar {
+  display: block;
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-card);
+  overflow: hidden;
+}
+.upd-bar.hidden { display: none; }
+.upd-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.85));
+  transition: width 0.18s linear;
+}
+/* On top of the REAL progress (driven by chrome.downloads), a white streak
+   runs so the bar reads as live even between 18s progress callbacks. */
+.upd-bar i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background-size: 200% 100%;
+  animation: updBarSheen 1.4s linear infinite;
+}
+@keyframes updBarSheen {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.upd-bar.done i { background: rgba(52, 211, 153, 0.75); }
+.upd-bar.done i::after { animation: none; opacity: 0; }
+.upd-bar b {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 9px 12px;
-  margin: 0 0 12px;
-  border-radius: 11px;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  font-size: 11.5px;
+  justify-content: center;
+  font-size: 9.5px;
   font-weight: 600;
-  color: #7dd3fc;
-  line-height: 1.35;
+  color: var(--text-main);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
-.update-box.hidden { display: none; }
-.update-box span { flex: 1; min-width: 0; }
+
+/* Where the build actually landed. An extension is never told its own install
+   folder and cannot write to it, so the one useful thing is to show the exact
+   file the user has to open. */
+.upd-where { display: block; min-width: 0; max-width: 100%; }
+.upd-where.hidden { display: none; }
+.upd-where code {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 6px;
+  padding: 3px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+.upd-mini {
+  flex: 0 0 auto;
+  border: 1px solid var(--border-card-hover);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.upd-mini:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-main); }
 /* Update channel retired: the installed build is the only build. */
 
 /* ---------------- Session counts are operator-only ---------------- */
@@ -1696,8 +2048,9 @@ body.onboarding .bottom-bar {
 /* The ids stay in the markup because popup.js still writes to them. */
 .counter-cluster { display: none !important; }
 /* ================= Saved accounts ================= */
-/* Four grid tracks: dot | text | time | actions. The text track is the only
-   one allowed to shrink, and it truncates, so nothing can ever overlap. */
+/* Luxury-small: one slim row per session. The platform is carried by a
+   hairline edge inside the left border plus the tint of the name itself, not
+   by heavy pill chrome - the row should read as a list, the buttons speak. */
 .saved-row {
   display: grid;
   gap: 6px;
@@ -1705,68 +2058,76 @@ body.onboarding .bottom-bar {
 .saved-row:empty { display: none; }
 
 .acc-card {
-  display: grid;
-  grid-template-columns: 6px minmax(0, 1fr) auto auto;
+  display: flex;
   align-items: center;
-  column-gap: 10px;
-  padding: 9px 9px 9px 12px;
-  border-radius: 13px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
   background: var(--bg-card);
-  border: 1px solid transparent;
-  transition: background .18s var(--spring), border-color .18s var(--spring);
+  border: 1px solid var(--border-card);
+  /* The top hairline is the "cut glass" edge - barely there, but it gives the
+     row a machined surface instead of flat plastic. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+  transition: background .2s var(--spring), border-color .2s var(--spring), box-shadow .2s var(--spring);
 }
-.acc-card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-card);
+.acc-card.is-netflix {
+  border-color: rgba(255, 51, 75, .12);
+  box-shadow: inset 2px 0 0 rgba(255, 51, 75, .38), inset 0 1px 0 rgba(255, 255, 255, .03);
 }
+.acc-card.is-prime {
+  border-color: rgba(0, 180, 216, .12);
+  box-shadow: inset 2px 0 0 rgba(0, 180, 216, .38), inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.acc-card.is-crunchyroll {
+  border-color: rgba(244, 117, 33, .12);
+  box-shadow: inset 2px 0 0 rgba(244, 117, 33, .38), inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.acc-card:hover { background: var(--bg-card-hover); }
+.acc-card.is-netflix:hover { border-color: rgba(255, 51, 75, .3); }
+.acc-card.is-prime:hover { border-color: rgba(0, 180, 216, .3); }
+.acc-card.is-crunchyroll:hover { border-color: rgba(244, 117, 33, .3); }
 
-.acc-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent-cyan);
-  transition: opacity .18s ease, transform .18s ease;
-}
-.acc-card.is-netflix .acc-dot { background: var(--accent-netflix); }
-.acc-card.is-prime .acc-dot { background: var(--accent-prime); }
-.acc-card:hover .acc-dot { transform: scale(1.2); }
-
-/* the only flexible track: two lines, so the name never shares width with
-   anything and can never be clipped by its neighbour */
-.acc-main {
-  min-width: 0;
-  display: grid;
-  gap: 1px;
-  align-content: center;
-}
-.acc-name {
-  font-size: 13px;
-  font-weight: 600;
+.acc-title {
+  font-size: 12.5px;
+  font-weight: 700;
   letter-spacing: 0;
   color: var(--text-main);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  /* no ligatures: some faces merge "nt" into something that reads as "r" */
   font-variant-ligatures: none;
   font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
 }
-.acc-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: .02em;
-  color: var(--text-faint);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.acc-card.is-netflix .acc-title { color: #ff8096; }
+.acc-card.is-prime .acc-title { color: #5ad1ea; }
+.acc-card.is-crunchyroll .acc-title { color: #f8a35f; }
+
+/* Days left, next to the platform name on a saved card. Tiny dentist-style
+   stamp: quiet when the account is healthy, amber as the renewal nears, red
+   once it has passed (the session is suspect and will be replaced on the next
+   use). title keeps white-space nowrap so the badge never pushes Enter out. */
+.acc-days {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 12px;
+  vertical-align: 1px;
   white-space: nowrap;
 }
-
-.acc-time {
-  font-size: 10.5px;
-  color: var(--text-faint);
-  white-space: nowrap;
-  flex: 0 0 auto;
+.acc-days.fine {
+  color: #7ee2b8;
+  background: rgba(56, 239, 156, .1);
+}
+.acc-days.soon {
+  color: #ffd166;
+  background: rgba(255, 209, 102, .12);
+}
+.acc-days.expired {
+  color: #ff8096;
+  background: rgba(255, 51, 75, .14);
 }
 
 .acc-actions {
@@ -1776,37 +2137,77 @@ body.onboarding .bottom-bar {
   flex: 0 0 auto;
 }
 
-/* Re-enter: matched to the row, not competing with it. */
+/* Enter: the only solid affordance on the row, and deliberately the quietest
+   one - a 24px whisper that lights up in the platform colour when touched. */
 .acc-go {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 13px;
+  justify-content: center;
+  height: 24px;
+  padding: 0 11px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, .06);
+  background: rgba(255, 255, 255, .05);
   color: var(--text-muted);
   font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: -.003em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
   white-space: nowrap;
   cursor: pointer;
   transition: background .16s ease, color .16s ease, border-color .16s ease;
 }
-.acc-go svg { width: 9px; height: 9px; fill: currentColor; opacity: .8; flex: 0 0 auto; }
-.acc-go:hover {
-  background: rgba(56, 189, 248, .14);
-  border-color: rgba(56, 189, 248, .3);
-  color: #7dd3fc;
+/* Hovering the ROW wakes Enter up a shade, so the surface feels connected
+   even before the cursor is on the button itself. */
+.acc-card:hover .acc-go { background: rgba(255, 255, 255, .08); }
+.acc-card.is-netflix .acc-go:hover {
+  background: rgba(255, 51, 75, .16);
+  border-color: rgba(255, 51, 75, .38);
+  color: #ff8096;
 }
-.acc-go:hover svg { opacity: 1; }
-.acc-go:active { background: rgba(56, 189, 248, .2); }
+.acc-card.is-prime .acc-go:hover {
+  background: rgba(0, 180, 216, .16);
+  border-color: rgba(0, 180, 216, .38);
+  color: #5ad1ea;
+}
+.acc-card.is-crunchyroll .acc-go:hover {
+  background: rgba(244, 117, 33, .16);
+  border-color: rgba(244, 117, 33, .38);
+  color: #f8a35f;
+}
+.acc-go:active { transform: scale(.97); }
 .acc-go:focus-visible { outline: none; border-color: rgba(56, 189, 248, .55); }
+
+/* TV connect: Netflix-only, same shape as Enter with a stronger tint. */
+.acc-tv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, .07);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, border-color .16s ease;
+}
+.acc-card.is-netflix .acc-tv:hover {
+  background: rgba(255, 51, 75, .26);
+  border-color: rgba(255, 51, 75, .55);
+  color: #fff;
+}
+.acc-tv:active { transform: scale(.97); }
+.acc-tv:focus-visible { outline: none; border-color: rgba(251, 191, 36, .6); }
 
 /* delete stays hidden until the row is hovered */
 .acc-del {
-  width: 26px; height: 26px;
+  width: 24px; height: 24px;
   border-radius: 50%;
   background: transparent;
   border: none;
@@ -1818,10 +2219,1256 @@ body.onboarding .bottom-bar {
 }
 .acc-del svg { width: 12px; height: 12px; fill: currentColor; }
 .acc-card:hover .acc-del, .acc-del:focus-visible { opacity: 1; }
-.acc-del:hover { color: #fca5a5; background: rgba(248, 113, 113, .12); }
+.acc-del:hover { color: #fca5a5; background: rgba(248, 113, 113, .14); }
 
-/* narrow: the timestamp is the first thing to go, never the name or the button */
+/* ---------------------------------------------------------------------------
+   Small polish pass
+   Additive only - no existing colour, size or layout is changed here.
+   ------------------------------------------------------------------------ */
+
+/* Keyboard focus was drawn inconsistently, or not at all, on the newer
+   controls. One ring, one colour, everywhere. */
+.upd-b:focus-visible,
+.upd-mini:focus-visible,
+.cute-btn:focus-visible,
+.nav-btn:focus-visible,
+.icon-btn:focus-visible,
+.reset-btn:focus-visible,
+.vrow-btn:focus-visible,
+.swap-picker-btn:focus-visible,
+.acc-go:focus-visible,
+.acc-del:focus-visible,
+.acc-tv:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* The body is unselectable so dragging across the UI cannot highlight it, but
+   that also made the activation key, the build fingerprint and the saved update
+   path impossible to copy. Those are exactly the strings people need. */
+.upd-where code,
+.upd-txt,
+.build-fp,
+input,
+textarea,
+.mono,
+code {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* A disabled control should say so with the cursor, not just look dim. */
+button:disabled { cursor: not-allowed; }
+
+/* Keep the content from shifting sideways as the scrollbar appears. */
+body.popup-body { scrollbar-gutter: stable; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* The popup animates the progress bar, the cards and the view fade. Some people
+   find motion unpleasant or have it disabled system-wide, so honour that. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Operator announcement. Served to every install via remote-config and shown
+   here; it used to be published and then ignored. */
+.announce {
+  display: block;
+  padding: 8px 11px;
+  margin: 0 0 10px;
+  border-radius: 11px;
+  background: rgba(56, 189, 248, 0.10);
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  color: #bae6fd;
+  font-size: 11.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.announce.hidden { display: none; }
+
+/* ---------------- Streaming wait overlay ----------------
+   The account hunt is slow and invisible: each candidate is allowed up to
+   ~18s, and the tab loads in the BACKGROUND (active:false), so the user sees
+   nothing happening. With only a one-line status they assume it is stuck,
+   close the popup, and reopening it triggers the boot recovery that silently
+   restarts the whole search and can drop them into a dead account.
+
+   So the wait is now the whole window: a full-bleed overlay that says what is
+   happening, how far along it is, and that it will finish by itself.
+
+   Pattern copied from .ban-overlay (fixed/inset:0/blur/z-index/hidden toggle).
+   z-index sits above it on purpose: during a hunt the user must not be able to
+   reach anything underneath. */
+.stream-wait {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(8, 12, 20, 0.93);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.stream-wait.hidden { display: none; }
+
+.stream-wait-card {
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  background: rgba(16, 21, 32, 0.86);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  padding: 26px 22px 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  animation: banPop 0.2s ease;
+}
+
+/* One bar. It used to be three moving things stacked - a white light sweeping
+ * inside the fill, an accent light sweeping the whole track, and three hopping
+ * dots - and the read was "bugged, multiple lines", because that is exactly
+ * what it looked like: bright fragments breaking at the fill's edge. The dots
+ * markup never existed in the HTML and the white sweep duplicated the accent
+ * one; both are gone. What remains is a single track that is alive even at 0%
+ * (the accent sweep runs the whole width) and a fill that only grows with
+ * real progress - nothing animates inside the fill itself. */
+.stream-wait-track {
+  position: relative;
+  height: 4px;
+  margin: 14px 0 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+/* The travelling accent glow runs along the WHOLE track, so the bar is visibly
+ * working even at 0% - previously the sweep was hidden until the first percent
+ * arrived, which is precisely the moment it looked broken. */
+.stream-wait-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--load-accent), transparent);
+  opacity: 0.3;
+  animation: swTrackRun 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes swTrackRun {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+.stream-wait-track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--load-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--load-accent) 50%, transparent);
+  transition: width 0.35s linear;
+}
+.stream-wait.done .stream-wait-track::after { display: none; }
+
+.stream-wait-hold {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-faint, #64748b);
+}
+.stream-wait-hold b { color: var(--text-muted, #94a3b8); font-weight: 600; }
+.stream-wait-lock {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  margin-top: 2px;
+  opacity: 0.55;
+}
+.stream-wait-lock svg { width: 100%; height: 100%; fill: currentColor; }
+
+/* The Plan view's Connects block: the numbers behind the lights. Quiet by
+   default, because it is reference information, not an alert. */
+.plan-rate {
+  margin: 14px 0 4px;
+  padding-top: 13px;
+  border-top: 1px solid var(--border-card);
+}
+.plan-rate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+.plan-rate-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.plan-rate-tier {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+}
+.plan-rate-rows { display: flex; flex-direction: column; gap: 7px; }
+.plan-rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.plan-rate-name {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.plan-rate-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+.plan-rate-val.warn { color: #fbbf24; }
+.plan-rate-val.off  { color: #f87171; }
+.plan-rate-val.none { color: var(--text-faint); }
+.plan-rate-note {
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+/* ── Halloween ──────────────────────────────────────────────────────────
+   Scoped entirely to body.halloween. Removing that one class returns the
+   extension to its normal appearance, which is what happens automatically on
+   3 November - so there is no residual styling to clean up in November.
+
+   No images and no emoji: the bats and the pumpkin are drawn from CSS, so the
+   build stays a handful of files and nothing has to be fetched at 2am on the
+   31st. Everything here is also inside the existing prefers-reduced-motion
+   override further up this file, so the animations collapse for anyone who has
+   asked for less motion. */
+body.halloween { --hw-orange: #fb923c; --hw-deep: #b45309; }
+
+/* A warm wash over the whole window, plus a soft vignette so the cards still
+   separate from the background. */
+body.halloween::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(251, 146, 60, .16), transparent 60%),
+    radial-gradient(90% 50% at 100% 100%, rgba(180, 83, 9, .12), transparent 65%);
+}
+   feel like the season, not enough to fight the platform colours, which are
+   what tell the user which button is which. */
+body.halloween .stream-card,
+body.halloween .cute-card,
+body.halloween .member-card {
+  border-color: rgba(251, 146, 60, .18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 0 22px rgba(251, 146, 60, .07);
+}
+body.halloween .btn-shine { background: linear-gradient(115deg, transparent, rgba(251, 146, 60, .30), transparent); }
+/* The plan flag reads as carved rather than printed. */
+body.halloween .member-flag {
+  background: rgba(180, 83, 9, .18);
+  border-color: rgba(251, 146, 60, .30);
+  color: var(--hw-orange);
+}
+
+/* The one-line explanation under the cards. Deliberately the quietest text in
+   the view: it is reference, not an alert, and it must not compete with the
+   session counts or the platform names. */
+.rate-note {
+  margin: 10px 2px 4px;
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+.rate-note-link {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rate-note-link:hover { color: var(--accent-cyan); }
+
+/* The lights become an affordance: without this they look decorative, so nobody
+   would think to press them. */
+.rate-lights {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The long-form explanation, opened from the lights or "How it works".
+   A sheet rather than a toast: the text is several sentences, and a toast
+   truncates and disappears before it can be read. */
+.rate-help {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 70px;
+  z-index: 10001;
+  padding: 16px 16px 12px;
+  border-radius: 16px;
+  background: rgba(16, 21, 32, 0.97);
+  border: 1px solid var(--border-card-hover, rgba(255, 255, 255, 0.16));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .55);
+  animation: banPop 0.18s ease;
+}
+.rate-help-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+  margin-bottom: 8px;
+}
+.rate-help p {
+  margin: 0 0 7px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-muted, #94a3b8);
+}
+.rate-help p:last-of-type { margin-bottom: 4px; }
+.rate-help-close {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .06);
+  color: var(--text-muted, #94a3b8);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rate-help-close:hover { background: rgba(255, 255, 255, .1); color: var(--text-main, #f8fafc); }
+
+/* The decoration lives in its own layer rather than on body::before/::after.
+   Those sat at z-index 0, which meant every card and the header - all opaque or
+   nearly so - painted straight over the top of them. The effect was technically
+   applied and completely invisible, which is the worst outcome: nothing errors
+   and the operator concludes the switch is broken. */
+.hw-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  display: none;
+}
+body.halloween .hw-stage { display: block; }
+
+/* "Halloween", written. Large, letterspaced and faint enough to read as paper
+   rather than as a headline. */
+.hw-word {
+  position: absolute;
+  top: 74px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-indent: .22em;
+  text-transform: uppercase;
+  color: rgba(251, 146, 60, .085);
+  text-shadow: 0 0 26px rgba(251, 146, 60, .10);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Bats, drawn as inline SVG so there is no image file and no emoji. Each one
+   crosses at its own height, speed and delay - four bats in lockstep reads as a
+   conveyor belt, not as flight. */
+.hw-bats { position: absolute; inset: 0; }
+.hw-bat {
+  position: absolute;
+  width: 26px;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 28'%3E%3Cpath fill='%23100806' d='M26 13c-3-5-9-8-16-8 2 4 3 8 2 12-4-2-8-2-11 0 4 2 7 5 8 9 4-3 10-4 17-4s13 1 17 4c1-4 4-7 8-9-3-2-7-2-11 0-1-4 0-8 2-12-7 0-13 3-16 8z'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0;
+}
+/* The wing beat is a vertical squash on the whole bat. It reads correctly at this
+   size and costs one transform, where animating an SVG path would cost more and
+   look mechanical. */
+.hw-bat { animation: batFly linear infinite, batFlap .28s ease-in-out infinite alternate; }
+@keyframes batFly {
+  0%   { transform: translateX(-70px); opacity: 0; }
+  8%   { opacity: .9; }
+  50%  { transform: translateX(190px); }
+  92%  { opacity: .9; }
+  100% { transform: translateX(460px); opacity: 0; }
+}
+@keyframes batFlap {
+  from { scale: 1 1; }
+  to   { scale: 1 .62; }
+}
+.hw-bat.b1 { top: 58px;  animation-duration: 13s, .28s; animation-delay: 0s, 0s;   opacity: .85; }
+.hw-bat.b2 { top: 104px; animation-duration: 9.5s, .24s; animation-delay: -3.4s, .06s; opacity: .6; }
+.hw-bat.b3 { top: 168px; animation-duration: 16s, .32s; animation-delay: -7.1s, .12s; opacity: .5; }
+.hw-bat.b4 { top: 246px; animation-duration: 11s, .26s; animation-delay: -1.9s, .18s; opacity: .4; }
+
+/* Pumpkins along the bottom, bobbing gently. Drawn as SVG too. They sit behind
+   the dock, which is translucent, so the tops show through it rather than
+   fighting it. */
+.hw-pumpkins { position: absolute; left: 0; right: 0; bottom: 0; height: 62px; }
+.hw-pumpkin {
+  position: absolute;
+  bottom: 4px;
+  width: 30px;
+  height: 30px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='%23f97316'%3E%3Cpath d='M24 8c3 0 5 2 6 4 5 0 9 4 9 9 0 8-6 15-15 15S9 29 9 21c0-5 4-9 9-9 1-2 3-4 6-4z'/%3E%3Cpath d='M23 4h3l-1 6h-3z'/%3E%3C/svg%3E%3Cg fill='%23fb923c' opacity='.55'%3E%3Cpath d='M14 20c0-4 2-7 5-8-1 3-1 6 0 9z'/%3E%3Cpath d='M34 20c0-4-2-7-5-8 1 3 1 6 0 9z'/%3E%3C/g%3E%3C/svg%3E") no-repeat center / contain;
+  animation: pumpkinBob 3.4s ease-in-out infinite alternate;
+}
+@keyframes pumpkinBob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-4px) rotate(2deg); }
+}
+.hw-pumpkin.p1 { left: 6px;   animation-duration: 3.4s; animation-delay: -0.4s; opacity: .9; }
+.hw-pumpkin.p2 { left: 34px;  width: 22px; height: 22px; animation-duration: 4.1s; animation-delay: -1.2s; opacity: .7; }
+.hw-pumpkin.p3 { left: 62px;  animation-duration: 2.9s; animation-delay: -2.1s; opacity: .55; }
+.hw-pumpkin.p4 { right: 60px; width: 24px; height: 24px; animation-duration: 3.8s; animation-delay: -0.9s; opacity: .7; }
+.hw-pumpkin.p5 { right: 30px; width: 20px; height: 20px; animation-duration: 4.4s; animation-delay: -1.7s; opacity: .5; }
+
+/* ── Halloween on the waiting screen ───────────────────────────────────────
+   The same treatment as the page: pumpkins, a couple of bats crossing the card,
+   and a warm wash. Scoped to body.halloween, so the normal waiting screen is
+   untouched, and all of it inherits the existing prefers-reduced-motion
+   override. */
+.stream-wait .sw-bats,
+.stream-wait .sw-pumpkin { display: none; }
+body.halloween .stream-wait .sw-bats,
+body.halloween .stream-wait .sw-pumpkin { display: block; }
+
+body.halloween .stream-wait {
+  background:
+    radial-gradient(130% 70% at 50% -20%, rgba(251, 146, 60, .20), transparent 62%),
+    radial-gradient(90% 60% at 100% 100%, rgba(180, 83, 9, .16), transparent 66%),
+    rgba(8, 12, 20, .93);
+}
+body.halloween .stream-wait-card {
+  border-color: rgba(251, 146, 60, .28);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .45), 0 0 34px rgba(251, 146, 60, .12);
+}
+
+/* Two bats crossing the top of the card, at different speeds and phases. */
+.stream-wait .sw-bats {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 20px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.stream-wait .sw-bat {
+  position: absolute;
+  width: 17px;
+  height: 9px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 28'%3E%3Cpath fill='%23100806' d='M26 13c-3-5-9-8-16-8 2 4 3 8 2 12-4-2-8-2-11 0 4 2 7 5 8 9 4-3 10-4 17-4s13 1 17 4c1-4 4-7 8-9-3-2-7-2-11 0-1-4 0-8 2-12-7 0-13 3-16 8z'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0;
+  animation: swBatFly 7s linear infinite, swBatFlap .26s ease-in-out infinite alternate;
+}
+.stream-wait .sw-bat.s2 {
+  top: 9px;
+  opacity: .6;
+  animation-duration: 5.2s, .22s;
+  animation-delay: -2.8s, .1s;
+}
+@keyframes swBatFly {
+  0%   { transform: translateX(-24px); opacity: 0; }
+  12%  { opacity: .85; }
+  88%  { opacity: .85; }
+  100% { transform: translateX(320px); opacity: 0; }
+}
+@keyframes swBatFlap {
+  from { scale: 1 1; }
+  to   { scale: 1 .6; }
+}
+
+/* A pumpkin under the title, bobbing with the dots. */
+.stream-wait .sw-pumpkin {
+  width: 26px;
+  height: 26px;
+  margin: 12px auto 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='%23f97316'%3E%3Cpath d='M24 8c3 0 5 2 6 4 5 0 9 4 9 9 0 8-6 15-15 15S9 29 9 21c0-5 4-9 9-9 1-2 3-4 6-4z'/%3E%3Cpath d='M23 4h3l-1 6h-3z'/%3E%3C/svg%3E%3Cg fill='%23fb923c' opacity='.5'%3E%3Cpath d='M14 20c0-4 2-7 5-8-1 3-1 6 0 9z'/%3E%3Cpath d='M34 20c0-4-2-7-5-8 1 3 1 6 0 9z'/%3E%3C/g%3E%3C/svg%3E") no-repeat center / contain;
+  animation: swPumpkinBob 3s ease-in-out infinite alternate;
+}
+@keyframes swPumpkinBob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-3px) rotate(2deg); }
+}
+
+
+
+/* The allowance, as one bar.
+   It was one LED per connect, which meant PRO1 drew twelve of them: wider than
+   the card, and unreadable at a glance because nobody can count twelve dots. A
+   single track is the same width at 4 and at 12, so raising an allowance never
+   changes the layout again. */
+.rate-meter {
+  display: block;
+  width: 54px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .13);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  overflow: hidden;
+}
+.rate-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, .45);
+  transition: width .25s ease;
+}
+.rate-fill.spent {
+  background: rgba(248, 113, 113, .45);
+  box-shadow: none;
+}
+/* Unknown: offline, or the server would not confirm. Dashed reads as "no value"
+   without inventing one. */
+.rate-meter.dashed {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .7);
+}
+/* VIP. The infinity sign, deliberately NOT a dot of the same size as the LEDs:
+   a ring here read as "1 of 1", which is the worst possible thing to tell a
+   customer with unlimited connects. */
+.rate-unlimited {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+  color: #4ade80;
+  text-shadow: 0 0 6px rgba(74, 222, 128, .45);
+  align-self: center;
+}
+/* Per-platform tint for the waiting screen, kept to one hue so it stays calm. */
+.stream-wait { --load-accent: var(--accent-cyan, #38bdf8); }
+.stream-wait.t-netflix { --load-accent: #ff334b; }
+.stream-wait.t-prime   { --load-accent: #00b4d8; }
+.stream-wait.t-crunchyroll { --load-accent: #f47521; }
+
+/* Leave a beat on screen before it vanishes, so the success is actually seen
+   instead of the popup snapping back to the home view. On success the bar turns
+   green - the motion itself reports the result, so there is no need for a tick
+   or a checkmark. */
+.stream-wait.done .stream-wait-track i { background: var(--accent-mint, #34d399); }
+.stream-wait.fading { opacity: 0; transition: opacity 0.28s ease; }
+
+/* ── Maintenance state on a card ──────────────────────────────────────
+   A platform in maintenance keeps its card and says so. Hiding it - which is
+   what a platform the key does not include does - reads as a broken account,
+   and "where did Prime go" is the wrong thing to make a customer ask during
+   an outage they did not cause. */
+.stream-card.maint { opacity: .62; }
+.stream-card.maint .btn {
+  background: rgba(148, 163, 184, .16) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+.stream-card.maint .btn::before { opacity: 0 !important; }
+
+/* ── Plan header band ────────────────────────────────────────────────
+   Plan name, badge, allowance and lifetime in one row.
+
+   They used to be four separate places: a large name, a sentence under it,
+   a KEY strip further down, and the same allowance again in the first
+   benefit. Reading the card meant stitching them together, and the two
+   statements of the allowance could disagree. One band, one source. */
+.member-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+/* min-width:0 on every level. A flex item defaults to min-width:auto, which
+   means it refuses to shrink below its own content - so one unbreakable phrase
+   is enough to push the card wider than the 360px popup and clip the right-hand
+   edge of everything inside it. */
+.member-head-left,
+.member-head-right { min-width: 0; }
+.member-head-left { display: flex; align-items: center; gap: 9px; }
+.member-head-right { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+.plan-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: var(--text-muted, #cbd5e1);
+  white-space: nowrap;
+}
+.member-card.active .plan-badge { background: rgba(255, 255, 255, .16); color: #fff; }
+
+.plan-allowance {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  color: var(--text-main, #f8fafc);
+  /* Not nowrap. "Unlimited connects" plus a "NEVER EXPIRES" badge plus the plan
+     name is close to the full width of the popup, and nowrap turns that into a
+     right-hand edge clipped off every card. */
+  overflow-wrap: anywhere;
+}
+.plan-lifetime {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, .14);
+  color: #4ade80;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.plan-lifetime.warn { background: rgba(251, 191, 36, .16); color: #fbbf24; }
+.plan-lifetime.hidden { display: none; }
+
+.m-platforms { margin-bottom: 12px; }
+
+/* The allowance is already stated in the header, so the list must not open by
+   saying it again. */
+.cute-benefits li { line-height: 1.5; }
+
+/* The popup is a fixed 360px. Nothing inside it may be allowed to scroll
+   sideways: a horizontal scrollbar in a panel this size means content is being
+   cut off, and the card edges are the first thing that goes. min-width:0 stops
+   a single unbreakable string from setting the width of the whole document. */
+body.popup-body { overflow-x: hidden; }
+body.popup-body .view,
+body.popup-body .cute-card { min-width: 0; max-width: 100%; }
+body.popup-body .view { overflow-x: clip; }
+
 @media (max-width: 340px) {
-  .acc-time { display: none; }
-  .acc-card { column-gap: 8px; }
+  .member-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* ── Welcome ─────────────────────────────────────────────────────────
+   The card used to open with a waving-hand emoji, then a heading, then two
+   inputs. The emoji read as a placeholder rather than as this product, and the
+   whole thing was one box, so there was no separation between "here is what
+   you are signing in to" and "here is the form".
+
+   Now: the mark and the name own the top of the screen, the form is its own
+   panel, and two plain lines say what each field is actually for - which is the
+   question a new customer has at exactly this moment. */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 4px 8px;
+  text-align: center;
+}
+.welcome-brand { display: flex; flex-direction: column; align-items: center; }
+.welcome-logo {
+  width: 76px;
+  height: 76px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 16px rgba(34, 211, 238, .4));
+  animation: welcome-pulse 4.5s ease-in-out infinite;
+}
+.welcome-mark { width: 100%; height: 100%; display: block; overflow: visible; }
+@keyframes welcome-pulse {
+  0%, 100% { filter: drop-shadow(0 4px 14px rgba(34, 211, 238, .34)); }
+  50%      { filter: drop-shadow(0 4px 22px rgba(34, 211, 238, .62)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-logo { animation: none; }
+}
+
+.welcome-title {
+  margin: 0 0 5px;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--text-main);
+}
+.welcome-title span {
+  background: linear-gradient(96deg, #22d3ee, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.welcome-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.welcome-card {
+  padding: 20px 18px 18px;
+  text-align: left;
+}
+.welcome-card .field { margin-bottom: 13px; }
+.welcome-card .field-label { margin-bottom: 6px; }
+
+.welcome-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.welcome-steps li {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-faint);
+  padding-left: 16px;
+  position: relative;
+}
+.welcome-steps li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, .55);
+}
+.welcome-steps b { color: var(--text-muted); font-weight: 700; }
+
+/* ── Community ────────────────────────────────────────────────────────────
+   A leaderboard, not a trophy case. Two later passes rebuilt the header and
+   the rows; what is still declared here is only what nothing below
+   re-defines: the list rhythm, the plan chip and the empty state. */
+.comm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.comm-plan { font-size: 9px; font-weight: 800; letter-spacing: .05em; padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,.07); color: var(--text-muted, #cbd5e1); }
+.comm-plan.t-vip { background: rgba(74, 222, 128, .16); color: #4ade80; }
+.comm-plan.t-pro1 { background: rgba(56, 189, 248, .15); color: #7dd3fc; }
+.comm-plan.t-pro { background: rgba(168, 85, 247, .15); color: #c084fc; }
+.comm-empty { padding: 14px 4px; font-size: 11.5px; color: var(--text-faint); text-align: center; }
+
+/* Five dock items instead of four.
+   There is no padding here on purpose. The bar is a fixed 52px tall with its
+   content vertically centred, so any vertical padding pushes the icon and label
+   out of the box - the button then renders half outside the dock, which is what
+   the Community item looked like. The row is made to fit by shrinking the label
+   and stopping it wrapping, not by padding the button. */
+/* Sizes are inherited from .nav-btn, unchanged. An override here bumped the icons
+   from 18px to 19px and shrank the labels, which made the whole dock read as
+   bigger and looser than it was with four items. The only two things that needed
+   saying here were: no vertical padding, and no wrapping. */
+.bottom-bar .nav-btn span { white-space: nowrap; }
+
+/* The dock icons are solid shapes and the rule above fills them. This one is drawn
+   as an outline, and a CSS fill beats the SVG's own fill="none", so without this
+   the strokes get filled in and the icon renders as a solid blob. */
+.bottom-bar .nav-btn svg.icon-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The active tint is applied as a fill everywhere else, which does nothing to an
+   outline icon - so the active tab would not change colour at all. */
+.nav-btn.active svg.icon-stroke { stroke: var(--accent-cyan); }
+
+/* ── Community, refined ────────────────────────────────────────────────────
+   Rank and name lead. XP sits right, small, as the score rather than the
+   headline. The hairline under each name is the only flourish: it answers
+   "how close am I to the person above me". The row shell, the right column
+   and the note are declared once more by the compact block below - which is
+   the last word; nothing there is duplicated here. */
+.comm-row.me {
+  border-color: rgba(34, 211, 238, .4);
+  background: rgba(34, 211, 238, .08);
+}
+.comm-row.medal-1 { background: linear-gradient(90deg, rgba(251, 191, 36, .12), rgba(255, 255, 255, .02)); }
+.comm-row.medal-2 { background: linear-gradient(90deg, rgba(203, 213, 225, .09), rgba(255, 255, 255, .02)); }
+.comm-row.medal-3 { background: linear-gradient(90deg, rgba(180, 83, 9, .13), rgba(255, 255, 255, .02)); }
+
+.comm-pos {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-faint);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.comm-row.medal-1 .comm-pos { color: #fbbf24; }
+.comm-row.medal-2 .comm-pos { color: #cbd5e1; }
+.comm-row.medal-3 .comm-pos { color: #d97706; }
+
+.comm-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Own class, not .comm-top: the card header uses that name, and sharing it
+   once made the header's space-between spread the plan chip and the activity
+   dot across the whole row - the much-too-loose look. */
+.comm-nameline { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.comm-who {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -.1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comm-bar {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .07);
+  overflow: hidden;
+}
+.comm-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(34, 211, 238, .55), #22d3ee);
+}
+.comm-row.me .comm-fill { background: linear-gradient(90deg, rgba(34, 211, 238, .8), #67e8f9); }
+
+.comm-you {
+  font-size: 8.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: #22d3ee; padding: 1px 5px; border-radius: 4px; background: rgba(34, 211, 238, .16);
+}
+
+/* ── Loading screen, rebuilt ───────────────────────────────────────────
+   The old one was a heading, three dots, a platform name and a 2px bar. At 0%
+   the bar's sweep was switched OFF and the dots did nothing, so the first
+   second looked like a frozen stub - which is what "it feels bugged" was.
+
+   Now: no dots, one clear line that says what is happening, and a track that is
+   alive from the first frame whether or not a percentage is known yet. */
+.sw-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.stream-wait-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.2px;
+  color: var(--text-main);
+  /* A soft pulse so the line itself reads as active while the work happens. */
+  animation: swTitlePulse 2.2s ease-in-out infinite;
+}
+@keyframes swTitlePulse {
+  0%, 100% { opacity: .72; }
+  50%      { opacity: 1; }
+}
+.stream-wait-sub {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--load-accent);
+}
+
+/* Track, glow and fill live once, up with the other waiting-scene rules; the
+   older copy that sat here declared 2px radius and a min-width on the fill,
+   which fought the real one and painted a sliver at 0%. */
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-wait-title { animation: none; }
+  .stream-wait-track::after { animation: none; opacity: .18; }
+}
+
+/* ── Community, compact ────────────────────────────────────────────────
+   Four rows of chrome before any data: heading, count, subtitle, legend,
+   sort. The legend alone took a full line to explain four badge words. It is
+   now a 5px dot on the row, and the count and the ordering share one line. */
+.comm-card { padding: 12px 14px 10px; }
+.comm-card .section-title { font-size: 13.5px; letter-spacing: -.2px; }
+.comm-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.comm-top .comm-n { font-size: 13px; font-weight: 800; line-height: 1; color: var(--text-main); font-variant-numeric: tabular-nums; }
+.comm-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin: 2px 0 8px;
+  padding-bottom: 7px; border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.comm-meta #comm-sub { font-size: 10px; color: var(--text-faint); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.comm-sort { display: flex; gap: 3px; flex: 0 0 auto; background: rgba(255, 255, 255, .04); padding: 2px; border-radius: 999px; }
+.comm-sortbtn {
+  border: 0; background: transparent; cursor: pointer;
+  font-size: 10px; font-weight: 800; letter-spacing: .02em;
+  padding: 4px 10px; border-radius: 999px; color: var(--text-faint);
+}
+.comm-sortbtn.on { background: rgba(34, 211, 238, .16); color: #67e8f9; }
+
+.comm-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 9px; align-items: center;
+  padding: 6px 8px; border-radius: 9px;
+  background: rgba(255, 255, 255, .022);
+  border: 1px solid transparent;
+  font-size: 12px;
+}
+
+.comm-dot { width: 5px; height: 5px; border-radius: 50%; flex: 0 0 auto; }
+.comm-dot.heavy { background: #4ade80; box-shadow: 0 0 5px rgba(74, 222, 128, .6); }
+.comm-dot.regular { background: #38bdf8; }
+.comm-dot.light { background: rgba(255, 255, 255, .28); }
+.comm-dot.new { background: rgba(255, 255, 255, .13); }
+
+.comm-right { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+/* One number per row. "N today" was a right-column line of its own beneath the
+   score, and the XP label a fourth - the count line under the heading already
+   says how many are in today, and "ranked by XP" says what the number means.
+   Two small-caps lines on every row was exactly the bulk this card was asked
+   to lose. */
+.comm-today, .comm-xpl { display: none; }
+.comm-xp { font-size: 11.5px; font-weight: 800; color: var(--text-main); font-variant-numeric: tabular-nums; }
+
+.comm-note { margin: 9px 0 0; font-size: 10px; line-height: 1.5; color: var(--text-faint); text-align: center; }
+
+/* ── Community: four pages behind one tab ──
+ *
+ * The sub-navigation sits above the card rather than inside it, so switching
+ * page does not have to move the heading. It scrolls horizontally instead of
+ * wrapping: four short labels fit, and wrapping would push the content down by
+ * a row on the narrowest layouts.
+ */
+.comm-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.comm-tabs::-webkit-scrollbar { display: none; }
+
+.comm-tab {
+  flex: 1 0 auto;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-2, transparent);
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: .01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.comm-tab:hover { color: var(--text-main); }
+.comm-tab.on {
+  color: #0b0f14;
+  background: linear-gradient(135deg, #67e8f9, #38bdf8);
+  border-color: transparent;
+}
+.comm-tab:focus-visible { outline: 2px solid #67e8f9; outline-offset: 2px; }
+
+/* ── Updates ── */
+/* ── Updates, animated ── *
+ * Entries rise in one by one when the page opens (staggered), a hover lifts
+ * and tints the card, the change-marker dots breathe, and a live download bar
+ * carries a travelling sheen on top of the real progress. */
+.upd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.upd-item {
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  animation: updRise .5s var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+  transition: transform .2s var(--spring), border-color .2s ease, box-shadow .2s ease;
+}
+.comm-page[data-page="updates"].hidden .upd-item { animation: none; }
+.upd-item:nth-child(1) { --i: 0; }
+.upd-item:nth-child(2) { --i: 1; }
+.upd-item:nth-child(3) { --i: 2; }
+.upd-item:nth-child(4) { --i: 3; }
+.upd-item:nth-child(5) { --i: 4; }
+.upd-item:nth-child(n+6) { --i: 5; }
+@keyframes updRise {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.upd-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.6), 0 0 18px -8px rgba(56, 189, 248, 0.25);
+}
+.upd-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+/* Version numbers are jewellery too: a small glass chip in the app cyan, so
+   the eye can jump release to release down the timeline. */
+.upd-ver {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: #7dd3fc;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+.upd-when {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--text-faint);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+/* The newest build is the news: it carries a cyan wash and its border is lit,
+   so the page reads top-down through the timeline. */
+.upd-item:first-child {
+  border-color: rgba(56, 189, 248, 0.28);
+  background:
+    linear-gradient(160deg, rgba(56, 189, 248, 0.07), transparent 60%),
+    var(--card);
+}
+.upd-list-changes { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.upd-change {
+  position: relative;
+  padding-left: 13px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim, var(--text-faint));
+}
+.upd-change::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #67e8f9;
+  opacity: .75;
+  animation: chgPulse 2.6s ease-in-out infinite;
+}
+.upd-fix .upd-change::before { background: #fbbf24; }
+@keyframes chgPulse {
+  0%, 100% { transform: scale(1); opacity: .75; }
+  50%      { transform: scale(1.5); opacity: 1; }
+}
+
+/* ── Contact ── */
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s ease, background .2s ease, transform .22s var(--spring), box-shadow .2s ease;
+}
+.contact-row:hover {
+  border-color: #67e8f9;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.6), 0 0 18px -8px rgba(34, 211, 238, 0.28);
+  background: rgba(56, 189, 248, 0.05);
+}
+.contact-row:focus-visible { outline: 2px solid #67e8f9; outline-offset: 2px; }
+.contact-ic { display: flex; width: 18px; height: 18px; flex: 0 0 auto; color: #67e8f9; }
+.contact-ic svg { width: 100%; height: 100%; fill: currentColor; }
+.contact-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.contact-txt b { font-size: 12px; font-weight: 800; color: var(--text-main); }
+.contact-txt span { font-size: 11px; color: var(--text-faint); }
+/* ── Store, animated ──────────────────────────────────────────────────────
+ * Four small tiles at the point of sale. The first version read like a price
+ * list: it made the plans look interchangeable and gave the whole tab the
+ * weight of a checkout. Two columns of small tiles make each plan a single
+ * glanceable object, and each tile behaves like a jewel - a conic light runs
+ * around its edge (staggered so the four never flash together), the tier rule
+ * shimmers, the dot breathes, and the tiles drop in one after another when
+ * the page opens. Each tile sets --c (its ink) and --s (a wash of it),
+ * because color-mix() is not worth relying on inside an injected stylesheet.
+ */
+@property --sb {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.store-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.store-card {
+  --c: #94a3b8;
+  --s: rgba(148, 163, 184, .12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 12px 12px 11px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, var(--s), transparent 62%),
+    var(--card);
+  overflow: hidden;
+  /* Arrival: one tile at a time, rising into place. `backwards` holds them
+     invisible until their own delay starts, so the order is felt. */
+  animation: storePop .5s var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
+  transition: transform .22s var(--spring), box-shadow .22s ease;
+}
+/* Reopening the page replays the arrival: while the page is hidden the
+   animation is dropped entirely, and re-applying it restarts it. */
+.comm-page[data-page="store"].hidden .store-card { animation: none; }
+.store-card:nth-child(1) { --i: 0; }
+.store-card:nth-child(2) { --i: 1; }
+.store-card:nth-child(3) { --i: 2; }
+.store-card:nth-child(4) { --i: 3; }
+.store-card:nth-child(n+5) { --i: 4; }
+@keyframes storePop {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.store-card.t-vip  { --c: #4ade80; --s: rgba(74, 222, 128, .16); }
+.store-card.t-pro1 { --c: #7dd3fc; --s: rgba(56, 189, 248, .16); }
+.store-card.t-pro  { --c: #c084fc; --s: rgba(168, 85, 247, .16); }
+.store-card.t-prem { --c: #fbbf24; --s: rgba(251, 191, 36, .15); }
+
+/* Hover lifts the jewel and lights the wash beneath it. The shadow uses the
+   tier's own colour, so a green tile throws green light. */
+.store-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 26px -12px var(--s),
+    0 0 20px -8px var(--s);
+}
+
+/* A short colour rule along the top edge - now alive: it glows and its colour
+   runs slowly along the edge instead of sitting there like a printed line. */
+.store-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--c), var(--s) 35%, var(--c) 60%, var(--s) 85%, var(--c));
+  background-size: 200% 100%;
+  box-shadow: 0 0 9px var(--s);
+  animation: ruleRun 3.2s ease-in-out infinite;
+}
+@keyframes ruleRun {
+  0%, 100% { background-position: 0 0; }
+  50%      { background-position: 100% 0; }
+}
+
+/* The travelling light around the border. A masked gradient ring: the fill
+   still comes from the card, only the 1px edge glows - and the delay key makes
+   the four sweeps offset, so the grid reads as breathing. */
+.store-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: conic-gradient(from var(--sb), transparent 0deg, var(--c) 42deg, var(--s) 90deg, transparent 150deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: sbSpin 4.2s linear infinite;
+  animation-delay: calc(var(--i, 0) * -1.05s);
+  pointer-events: none;
+}
+@keyframes sbSpin { to { --sb: 360deg; } }
+
+.store-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+  margin-bottom: 5px;
+  animation: dotPulse 2.4s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--s); }
+  50%      { box-shadow: 0 0 0 5px var(--s), 0 0 10px var(--c); }
+}
+
+.store-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: var(--c);
+  line-height: 1.2;
+  text-shadow: 0 0 12px var(--s);
+}
+
+.store-allow {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+  background: linear-gradient(180deg, #fff 20%, #c7d2fe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.store-meta {
+  font-size: 9.5px;
+  line-height: 1.35;
+  color: var(--text-faint);
+}
+
+.store-price {
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* A filled price is tier-jewellery: coloured, softly lit. A dash, never a
+   guess - a wrong price on a store page is worse than no price, because a
+   customer acts on it. */
+.store-price:not(:empty) {
+  color: var(--c);
+  text-shadow: 0 0 10px var(--s);
+}
+.store-price:empty::before { content: '\2014'; color: var(--text-faint); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .store-card, .store-card::before, .store-card::after, .store-dot { animation: none; }
 }
