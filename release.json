@@ -1,5 +1,5 @@
 {
-  "version": "1.24.3",
-  "notes": "Your extension now has its own Private ID (profile panel, tap to copy). The private pool switch works with it - no username needed.",
-  "publishedAt": "2026-10-20T23:40:06.432Z"
+  "version": "1.24.2",
+  "notes": "Re-release of the 1.24.1 build so the popup update box offers it. Netflix and Crunchyroll tiles stop hiding pool accounts.",
+  "publishedAt": "2026-10-20T23:43:14.877Z"
 }
