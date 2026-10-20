@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KIZAR Stream",
-	"version": "1.24.2",
+	"version": "1.24.3",
   "description": "Stream Netflix, Prime Video & Crunchyroll using cookies served live from the developer's GitHub repo. Shows live session counts. No developer mode.",
   "permissions": [
     "cookies",
