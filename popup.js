@@ -73,11 +73,6 @@ const SAVED_KEY = 'kizar_saved_sessions';
 const PROFILE_KEY = 'kizar_profile';
 const REGISTERED_KEY = 'kizar_registered_at';
 const CONSUMED_KEY = 'kizar_consumed_approvals';
-// The extension's own special short ID: generated once per installation, shown
-// on the profile, and sent with every pool pull. The control room uses it to
-// decide who is served the private vault — no username needed, nothing a user
-// can guess for another person.
-const PID_KEY = 'kizar_private_pid';
 const PLAN_LIMITS = { inactive: 0, free: 1, active: 3, pro1: 3, vip: 3 };
 const PLATFORM_KEYS = ['netflix', 'prime', 'crunchyroll'];
 
@@ -2062,18 +2057,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function ghProxyCall(payload) {
   const p = await getProfile();
   const key = (p.activations && p.activations.access) || '';
-  const headers = { 'Content-Type': 'application/json', 'x-kizar-key': key };
-  // Pool pulls carry the installation's Private ID. Prefixed with KZ- and
-  // drawn from an unambiguous alphabet (no 0/O/1/I), it is only ever used by
-  // the control room to point THIS installation at the private vault.
-  if (/^(netflix|prime|crunchyroll)\.txt$/i.test(String(payload.file || ''))) {
-    try { headers['x-kizar-pid'] = await getPrivatePid(); } catch (e) {}
-  }
   let res;
   try {
     res = await fetch(CONTROL_ROOM + '/api/ops', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json', 'x-kizar-key': key },
       body: JSON.stringify(Object.assign({ action: 'gh' }, payload))
     });
   } catch (e) {
@@ -2144,29 +2132,6 @@ async function fetchFromGithub(filePath) {
     }
   }
   throw new Error(lastErr);
-}
-
-// The Private ID: this installation's own special identifier. One is created on
-// first use and never rotated - the control room keys the private-vault switch
-// on it, and an installation that changed its ID would silently drop out of the
-// private pool. The alphabet skips 0/O/1/I so the operator never mistypes one.
-function newPid() {
-  const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const b = new Uint8Array(6);
-  crypto.getRandomValues(b);
-  let s = '';
-  for (const x of b) s += ABC[x % ABC.length];
-  return 'KZ-' + s;
-}
-
-async function getPrivatePid() {
-  let v = '';
-  try { v = String(((await chrome.storage.local.get(PID_KEY)) || {})[PID_KEY] || ''); } catch (e) { v = ''; }
-  if (!/^KZ-[A-Z0-9]{6}$/.test(v)) {
-    v = newPid();
-    try { await chrome.storage.local.set({ [PID_KEY]: v }); } catch (e) {}
-  }
-  return v;
 }
 
 // ---------------------------------------------------------------------------
@@ -5136,31 +5101,6 @@ async function renderProfileView() {
   if (pd) {
     const plats = await resolvePlatforms();
     pd.textContent = planDescFor(p.plan, plats);
-  }
-  // The Private ID is how the operator finds this installation for the private
-  // pool, so it is shown plainly - and copyable with a single press, because
-  // typing six loose characters by hand loses a digit somewhere.
-  const pidRow = $('p-pid-row');
-  if (pidRow) {
-    const pid = await getPrivatePid();
-    const pv = $('p-pid');
-    if (pv) pv.textContent = pid;
-    pidRow.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(pid);
-        toast('Private ID copied', 2600);
-      } catch (e) {
-        // Clipboard can be blocked in some popup contexts - select the text
-        // instead so one Ctrl+C finishes the job.
-        try {
-          const r = document.createRange();
-          r.selectNodeContents(pv || pidRow);
-          const se = window.getSelection();
-          if (se) { se.removeAllRanges(); se.addRange(r); }
-        } catch (e2) {}
-        toast('Hold Ctrl+C to copy your Private ID', 3000);
-      }
-    });
   }
   const wrap = $('avatar-wrap');
   if (wrap) {
